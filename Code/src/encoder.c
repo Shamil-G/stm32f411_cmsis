@@ -7,6 +7,8 @@ extern unsigned long cntMainTick;
 #define BounceUp 	10000
 #define BounceDown 	10000
 #define BounceButton 	10000
+
+struct encValue EncValue;
 //*
 int is_bounce(){
   Bounce=mainTick-EncValue.prevMainTick;
@@ -20,26 +22,15 @@ int is_bounce(){
 
 void TIM3_IRQHandler(void){
   if( (EncTimer->SR & TIM_SR_TIF) && !is_bounce()){
-      int shift=1;
-      volatile uint32_t vl=EncTimer->CNT;
-      vl=EncTimer->CNT & 0x0000ffff;;
-
-      if(EncValue.prevValue>vl+30)
-	shift=1;
-      else
-      if(vl>EncValue.prevValue)
-	shift=1;
-      else
-	shift=-1;
-
-      EncValue.prevValue = EncTimer->CNT;
+      // DIR=0 go to to right, DIR>0 - go to left
+      uint8_t forward =  EncTimer->CR1 & TIM_CR1_DIR;
 
       if(item_menu_status==Select){
-	  if( (shift>0 && active_menu_item!=Sinus && active_menu_item!=CH_TIMER)
-	      ||
-	      (shift<0 && active_menu_item!=Common)
-	  ){
-	      active_menu_item+=shift;
+	  if(forward==0 && active_menu_item!=Sinus && active_menu_item!=CH_TIMER){
+	     active_menu_item+=1;
+	  }
+	  else if(forward>0 && active_menu_item!=Common){
+	    active_menu_item-=1;
 	  }
       }
       else{
@@ -47,14 +38,14 @@ void TIM3_IRQHandler(void){
 	    case Common:
 		break;
 	    case PWM_FREQ:
-		  if(shift==1) freqUp();
+		  if(forward==0) freqUp();
 		  else
-		  if(shift==-1) freqDown();
+		  if(forward>0) freqDown();
 		break;
 	    case PWM_DUTY:
-		  if(shift==1) pwm_up();
+		  if(forward==0) pwm_up();
 		  else
-		  if(shift==-1) pwm_down();
+		  if(forward>0) pwm_down();
 		break;
 	    case CH_TIMER:
 	        if(selected_timer==TIMER1){
@@ -89,6 +80,7 @@ void TIM3_IRQHandler(void){
 void EXTI3_IRQHandler() {
   if( active_menu_item!=Common && !is_bounce() )
       item_menu_status=(item_menu_status==Select)?Edit:Select;
+  EncValue.prevValue=EncTimer->CNT & 0x0000ffff;
   // Очистка прерывания
   EXTI->PR |= EXTI_PR_PR3;
 }

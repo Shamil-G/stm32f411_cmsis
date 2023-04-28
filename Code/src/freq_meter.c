@@ -5,6 +5,8 @@
 #define IDLE 0
 #define DONE 1
 
+struct  freqMeter structFreqMeter;
+
 extern uint8_t  Tim1_posFreqPWM;
 extern uint32_t Tim1_listFreqPWMPSC[];
 volatile uint32_t freqState = IDLE;

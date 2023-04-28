@@ -1,5 +1,7 @@
-#include "main.h"
+#pragma once
 
+#ifndef DMA_H_
+#define DMA_H_
 
 void dma_init(SPI_TypeDef *spi);
 
@@ -9,3 +11,5 @@ void dma_init(SPI_TypeDef *spi);
 #define dma_ready(dmaStream) 		((((DMA_Stream_TypeDef *)dmaStream)->CR&DMA_SxCR_EN)==0?0:1)
 
 void dma1_clear_error(void);
+
+#endif

@@ -95,24 +95,19 @@ extern unsigned long mainTick;
 extern uint8_t  posFreqPWM;
 extern uint32_t listFreqPWMPSC[];
 
-struct {
+struct  freqMeter {
 	uint32_t prevTicks;
 	uint32_t curTicks;
 	uint32_t freq;
 	uint32_t counter;
 	uint16_t   psc;
-} structFreqMeter;
+};
 
-volatile struct {
-//	uint16_t curValue;
+struct encValue{
 	uint32_t prevValue;
 	uint32_t prevCntMainTick;
 	uint32_t prevMainTick;
-//	uint32_t curMainTick;
-//	uint8_t  buttonStatus;
-//	uint32_t maxBounceUp;
-//	uint32_t maxBounceDown;
-} EncValue;
+};
 
 typedef  enum{
   TIMER1 = 1,
