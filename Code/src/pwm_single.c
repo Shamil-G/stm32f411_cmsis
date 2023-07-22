@@ -3,6 +3,8 @@
 // PWM out port: GPIOB 3
 
 uint8_t  posFreqPWM;
+// В процентах заполнение положительного сигнала в меандре
+uint8_t  currDuty;
 
 uint32_t listFreqPWMPSC[]=
    { 5000000,	// 20Hz
@@ -27,22 +29,24 @@ uint32_t listFreqPWMPSC[]=
      20	 	// 5 MHz
     };
 
+void pwm_tune(){
+	PWMSingleTimerCCR=(listFreqPWMPSC[posFreqPWM] * (100-currDuty)) / 100;
+}
+
 void pwm_tim2_up(){
-  PWMSingleTimerCCR=(PWMSingleTimerCCR+listFreqPWMPSC[posFreqPWM]/10<PWMSingleTimer->ARR-1)?
-	    PWMSingleTimerCCR+listFreqPWMPSC[posFreqPWM]/10:listFreqPWMPSC[posFreqPWM]-2;
+	currDuty = ((currDuty==0)?2:(currDuty==2)?5:(currDuty==5)?10:(currDuty+10)>=100?95:(currDuty+10));
+	pwm_tune();
 }
 
 void pwm_tim2_down(){
-  PWMSingleTimerCCR=(PWMSingleTimerCCR>listFreqPWMPSC[posFreqPWM]/10)?
-			(PWMSingleTimerCCR-listFreqPWMPSC[posFreqPWM]/10)
-			:0;
+	currDuty = ((currDuty==2)?0:(currDuty==5)?2:(currDuty==10)?5:(currDuty==95)?90:currDuty-10);
+	pwm_tune();
 }
 
 void tim2_freqUp(){
   if(posFreqPWM<sizeof(listFreqPWMPSC)/4-1){
   	    posFreqPWM++;
   	    PWMSingleTimer->ARR=listFreqPWMPSC[posFreqPWM]-1;
-  	    PWMSingleTimerCCR=PWMSingleTimer->ARR/10;
       }
 }
 
@@ -50,7 +54,6 @@ void tim2_freqDown(){
   if(posFreqPWM>0){
 	    posFreqPWM--;
 	    PWMSingleTimer->ARR=listFreqPWMPSC[posFreqPWM]-1;
-	    PWMSingleTimerCCR=PWMSingleTimer->ARR/10;
   }
 }
 
@@ -78,7 +81,9 @@ void init_pwm(void)
 	PWMSingleTimer->ARR  = listFreqPWMPSC[posFreqPWM]-1; 	// 100 kHz
 	// Был косяк ! не в том регистре выставил значение
 	// и ничего не генерилось
-	PWMSingleTimerCCR = PWMSingleTimer->ARR/10;		// 10% - Коэффициент заполнения
+	currDuty = 20; // 20%
+	pwm_tune();
+//	PWMSingleTimerCCR = PWMSingleTimer->ARR/currDuty;		// 10% - Коэффициент заполнения
 //	PWMSingleTimer->CCR3 = PWMSingleTimer->ARR/10;		// 10% - Коэффициент заполнения
 
 	/* Set the Preload enable bit for channel3 */

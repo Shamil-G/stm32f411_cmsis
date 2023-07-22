@@ -56,15 +56,15 @@ float getFreqDuty(void){
       result/=TIM1->ARR;
   }
   if(selected_timer==TIMER2){
-      result=PWMSingleTimerCCR*100;
-      result/=PWMSingleTimer->ARR;
+      result=PWMSingleTimerCCR*100/PWMSingleTimer->ARR;
   }
-  return result;
+  return (100-result);
 }
 
 inline uint32_t getFreqMeter(void){
   if(structFreqMeter.curTicks > structFreqMeter.prevTicks){
       Ticks = structFreqMeter.curTicks - structFreqMeter.prevTicks;
+//      structFreqMeter.freq = (uint32_t)(CPU_CLOCK*Ticks/100)/structFreqMeter.psc;
       structFreqMeter.freq = (uint32_t)(CPU_CLOCK/Ticks)/structFreqMeter.psc;
   }
   return structFreqMeter.freq;

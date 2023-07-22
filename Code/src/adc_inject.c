@@ -28,7 +28,7 @@
 #define MIN_INPUT_VOLTAGE 	0.5
 #define MAX_INPUT_VOLTAGE 	2.5
 #define MAX_CURRENT 		2.5
-#define FAULT_LOW 			getInputVoltage()<FAULT_MIN_VALUE
+#define FAULT_LOW 		getInputVoltage()<FAULT_MIN_VALUE
 #define FAULT_HIGHT 		result.output_fault>FAULT_MAX_VALUE
 #define CNT_FAULT 			20
 
@@ -140,8 +140,8 @@ void ADC_IRQHandler()
       adc_result_buf.i_current[adc_result_buf.pos]=ADC1->JDR2; // Input Current
       adc_result_buf.o_voltage[adc_result_buf.pos]=ADC1->JDR3; // Output Voltage
       adc_result_buf.o_current[adc_result_buf.pos]=ADC1->JDR4; // Output Current
-      ADC1->CR2 |= ADC_CR2_JSWSTART;
       adc_result_buf.count++;
+      ADC1->CR2 |= ADC_CR2_JSWSTART;
   }
 
 }
@@ -155,6 +155,7 @@ void InitADC(void){
 //*
 // * Порт занят ADC, нам важно только прерывание
 	// ADC1: Init GPio PB6
+/*
 	InitGPio( GPIOA,
 				0,
 				analog,    //MODER:00
@@ -162,8 +163,10 @@ void InitADC(void){
 				0,
 				// Pull-UP, если питание идет с STM32
 				// Pull-down, если питание идет с енкодера
-				noPull,
+				noPull, // Порт на 05.05.2023 не используется
+//				noPull,
 				0); //AF:2
+*/
 	InitGPio( GPIOA,
 				2,
 				analog,    //MODER:00
@@ -173,6 +176,7 @@ void InitADC(void){
 				// Pull-down, если питание идет с енкодера
 				noPull,
 				0); //AF:2
+	// Check output voltage ADC1 CH4
 	InitGPio( GPIOA,
 				4,
 				analog,    //MODER:00
@@ -182,6 +186,7 @@ void InitADC(void){
 				// Pull-down, если питание идет с енкодера
 				noPull,
 				0); //AF:2
+	// Check output current ADC1 CH5
 	InitGPio( GPIOA,
 				5,
 				analog,    //MODER:00
@@ -245,6 +250,8 @@ void InitADC(void){
 	// По умолчанию, когда  ADC_JSQR_JL=0 только один канал работает из 4 и это JSQR4
 	// 20: Работают 4 канала
 	ADC1->JSQR |= ADC_JSQR_JL;
+	//Работают 3 канала, кроме JSQ1
+//	ADC1->JSQR |= ADC_JSQR_JL_1;
 
 	ADC1->JSQR &= ~(ADC_JSQR_JSQ1_Msk | ADC_JSQR_JSQ2_Msk | ADC_JSQR_JSQ3_Msk | ADC_JSQR_JSQ4_Msk);
 //	ADC1->JSQR |= ADC_JSQR_JSQ1_0 | ADC_JSQR_JSQ2_0 | ADC_JSQR_JSQ3_0 | ADC_JSQR_JSQ4_0;

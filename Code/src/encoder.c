@@ -3,6 +3,7 @@
 // Button IRQ for Encoder -> PB_3
 uint32_t Bounce;
 extern unsigned long cntMainTick;
+extern pwm_tune();
 
 #define BounceUp 	10000
 #define BounceDown 	10000
@@ -23,29 +24,31 @@ int is_bounce(){
 void TIM3_IRQHandler(void){
   if( (EncTimer->SR & TIM_SR_TIF) && !is_bounce()){
       // DIR=0 go to to right, DIR>0 - go to left
-      uint8_t forward =  EncTimer->CR1 & TIM_CR1_DIR;
+      uint8_t direction =  EncTimer->CR1 & TIM_CR1_DIR;
 
       if(item_menu_status==Select){
-	  if(forward==0 && active_menu_item!=Sinus && active_menu_item!=CH_TIMER){
-	     active_menu_item+=1;
-	  }
-	  else if(forward>0 && active_menu_item!=Common){
-	    active_menu_item-=1;
-	  }
+		  if(direction==0 && active_menu_item!=Sinus && active_menu_item!=CH_TIMER){
+			 active_menu_item+=1;
+		  }
+		  else if(direction>0 && active_menu_item!=Common){
+			active_menu_item-=1;
+		  }
       }
       else{
 	  switch (active_menu_item){
 	    case Common:
 		break;
 	    case PWM_FREQ:
-		  if(forward==0) freqUp();
+		  if(direction==0) freqUp();
 		  else
-		  if(forward>0) freqDown();
+		  if(direction>0) freqDown();
+		  // После установления новой частоты, надо обновить счетчик PWM - pwm_tune()
+		  pwm_tune();
 		break;
 	    case PWM_DUTY:
-		  if(forward==0) pwm_up();
+		  if(direction==0) pwm_up();
 		  else
-		  if(forward>0) pwm_down();
+		  if(direction>0) pwm_down();
 		break;
 	    case CH_TIMER:
 	        if(selected_timer==TIMER1){
@@ -80,7 +83,6 @@ void TIM3_IRQHandler(void){
 void EXTI3_IRQHandler() {
   if( active_menu_item!=Common && !is_bounce() )
       item_menu_status=(item_menu_status==Select)?Edit:Select;
-  EncValue.prevValue=EncTimer->CNT & 0x0000ffff;
   // Очистка прерывания
   EXTI->PR |= EXTI_PR_PR3;
 }

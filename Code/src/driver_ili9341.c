@@ -44,6 +44,8 @@ char 	*titleMenu[]={"Info", "Freq", "Duty", "Timer", "S"};
 uint16_t pos_MenuTitle[]={5, 75, 150, 215, 300};
 
 void ili9341_gpio_init(void){
+  i_voltage_buf[0]=0;
+  i_current_buf[0]=0;
   // RESET
   InitGPio( SPI_RESET_Port, SPI_RESET_Pin, output, push_pull, high, noPull, af0);
   PortReset(SPI_RESET_Port, SPI_RESET_Pin);
@@ -84,8 +86,8 @@ void showTitleCommon(){
   ili9341_SetBackColor(COLOR565_BLUE);
   ili9341_String(5,(3+0.3)*lcdprop.pFont->Height,"Voltage input:");
   ili9341_String(5,(4+0.3)*lcdprop.pFont->Height,"Current input:");
-  ili9341_String(5,(6+0.3)*lcdprop.pFont->Height,"Voltage output:");
-  ili9341_String(5,(7+0.3)*lcdprop.pFont->Height,"Current output:");
+  ili9341_String(5,(6+0.3)*lcdprop.pFont->Height,"ADC1 CH4:");
+  ili9341_String(5,(7+0.3)*lcdprop.pFont->Height,"ADC1 CH5:");
   ili9341_String(5,(9+0.3)*lcdprop.pFont->Height,"Frequency:");
 //  ili9341_SetTextColor(COLOR565_GOLD);
 //  ili9341_SetBackColor(COLOR565_BLACK);
@@ -102,18 +104,18 @@ void showCommon(){
   o_voltage = getOutputVoltage();
   o_current = getOutputCurrent();
 
-  sprintf(i_voltage_buf,"%f V ", i_voltage);
-  sprintf(i_current_buf,"%f A ", i_current);
-  sprintf(o_voltage_buf,"%f V ", o_voltage);
-  sprintf(o_current_buf,"%f A ", o_current);
+  sprintf(i_voltage_buf,"%4.3f v ", i_voltage);
+  sprintf(i_current_buf,"%4.3f a ", i_current);
+  sprintf(o_voltage_buf,"%4.3f v ", o_voltage);
+  sprintf(o_current_buf,"%4.3f a ", o_current);
 
-  sprintf(o_freq_buf," %ld Hz          ", getFreqMeter());
+  sprintf(o_freq_buf,"%7u Hz", (unsigned int)getFreqMeter());
 
-  ili9341_String(175,(3+0.3)*lcdprop.pFont->Height,i_voltage_buf);
-  ili9341_String(175,(4+0.3)*lcdprop.pFont->Height,i_current_buf);
-  ili9341_String(175,(6+0.3)*lcdprop.pFont->Height,o_voltage_buf);
-  ili9341_String(175,(7+0.3)*lcdprop.pFont->Height,o_current_buf);
-  ili9341_String(165,(9+0.3)*lcdprop.pFont->Height,o_freq_buf);
+  ili9341_String(170,(3+0.3)*lcdprop.pFont->Height,i_voltage_buf);
+  ili9341_String(170,(4+0.3)*lcdprop.pFont->Height,i_current_buf);
+  ili9341_String(170,(6+0.3)*lcdprop.pFont->Height,o_voltage_buf);
+  ili9341_String(170,(7+0.3)*lcdprop.pFont->Height,o_current_buf);
+  ili9341_String(145,(9+0.3)*lcdprop.pFont->Height,o_freq_buf);
 }
 
 void showTitlePWM_FREQ(){
