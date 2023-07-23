@@ -93,6 +93,7 @@ void tim11_50Hz_init(void);
 
 extern unsigned long mainTick;
 extern uint8_t  posFreqPWM;
+extern uint16_t  currDutyTim1;
 extern uint32_t listFreqPWMPSC[];
 
 struct  freqMeter {
@@ -171,8 +172,8 @@ void pwm_tim2_down();
 void tim2_freqUp();
 void tim2_freqDown();
 
-uint8_t pwm2_tim1_up(uint16_t pwm_value);
-uint8_t pwm2_tim1_down(uint16_t pwm_value);
+void pwm2_tim1_up();
+void pwm2_tim1_down();
 void tim1_freqUp();
 void tim1_freqDown();
 

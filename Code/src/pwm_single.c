@@ -3,7 +3,7 @@
 // PWM out port: GPIOB 3
 
 uint8_t  posFreqPWM;
-// В процентах заполнение положительного сигнала в меандре
+// В процентах заполнение меандра положительным сигналом
 uint8_t  currDuty;
 
 uint32_t listFreqPWMPSC[]=
@@ -75,8 +75,7 @@ void init_pwm(void)
 	// ECE: External clock enable -> disable
 	CLEAR_BIT(PWMSingleTimer->SMCR, TIM_SMCR_SMS | TIM_SMCR_ECE);
 
-
-	posFreqPWM=12;
+	posFreqPWM=13;
 	WRITE_REG(PWMSingleTimer->PSC, 1 - 1);
 	PWMSingleTimer->ARR  = listFreqPWMPSC[posFreqPWM]-1; 	// 100 kHz
 	// Был косяк ! не в том регистре выставил значение

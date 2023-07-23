@@ -17,6 +17,8 @@ char o_voltage_buf[48];
 char o_current_buf[48];
 
 char o_freq_buf[48];
+char o_freq_adc_buf[48];
+
 char o_duty[48];
 char o_status[200];
 
@@ -40,8 +42,8 @@ Menu active_menu_item=Common;
 Menu prev_active_menu_item;
 //uint8_t active_menu_item=0;
 
-char 	*titleMenu[]={"Info", "Freq", "Duty", "Timer", "S"};
-uint16_t pos_MenuTitle[]={5, 75, 150, 215, 300};
+char 	*titleMenu[]={"I", "Freq", "Duty", "Timer", "    "};
+uint16_t pos_MenuTitle[]={5, 35, 110, 180, 270};
 
 void ili9341_gpio_init(void){
   i_voltage_buf[0]=0;
@@ -77,7 +79,7 @@ void showTitle(){
       }
   }
   ili9341_SetFont(&Font16);
-  ili9341_String(pos_MenuTitle[4],(1+0.2)*lcdprop.pFont->Height, (item_menu_status==Select?"S":"E"));
+  ili9341_String(pos_MenuTitle[4],(1+0.2)*lcdprop.pFont->Height, (item_menu_status==Select?"    ":"Edit"));
   prev_active_menu_item=active_menu_item;
 }
 
@@ -88,7 +90,8 @@ void showTitleCommon(){
   ili9341_String(5,(4+0.3)*lcdprop.pFont->Height,"Current input:");
   ili9341_String(5,(6+0.3)*lcdprop.pFont->Height,"ADC1 CH4:");
   ili9341_String(5,(7+0.3)*lcdprop.pFont->Height,"ADC1 CH5:");
-  ili9341_String(5,(9+0.3)*lcdprop.pFont->Height,"Frequency:");
+  ili9341_String(5,(9+0.3)*lcdprop.pFont->Height,(selected_timer==TIMER1)?"FREQ INPUT: ":"FREQ TIMER2:");
+  ili9341_String(5,(10+0.3)*lcdprop.pFont->Height,"FREQ ADC:");
 //  ili9341_SetTextColor(COLOR565_GOLD);
 //  ili9341_SetBackColor(COLOR565_BLACK);
 }
@@ -137,7 +140,7 @@ void showTIMER(){
   }
   else
       if( prev_item_menu_status!=item_menu_status){
-	  ili9341_String(pos_MenuTitle[4],(1+0.2)*lcdprop.pFont->Height, (item_menu_status==Select?"S":"E"));
+	  ili9341_String(pos_MenuTitle[4],(1+0.2)*lcdprop.pFont->Height, (item_menu_status==Select?"    ":"Edit"));
 //	  ili9341_SetFont(&Font16);
 	  prev_item_menu_status=item_menu_status;
   }
@@ -153,7 +156,7 @@ void showPWM_FREQ(){
   }
   else
       if( prev_item_menu_status!=item_menu_status){
-	  ili9341_String(pos_MenuTitle[4],(1+0.2)*lcdprop.pFont->Height, (item_menu_status==Select?"S":"E"));
+	  ili9341_String(pos_MenuTitle[4],(1+0.2)*lcdprop.pFont->Height, (item_menu_status==Select?"    ":"Edit"));
 //	  ili9341_SetFont(&Font16);
 	  prev_item_menu_status=item_menu_status;
   }
@@ -170,7 +173,7 @@ void showPWM_DUTY(){
   }
   else
       if( prev_item_menu_status!=item_menu_status){
-	  ili9341_String(pos_MenuTitle[4],(1-0.3)*lcdprop.pFont->Height, (item_menu_status==Select?"S":"E"));
+	  ili9341_String(pos_MenuTitle[4],(1+0.2)*lcdprop.pFont->Height, (item_menu_status==Select?"    ":"Edit"));
 //	  ili9341_SetFont(&Font16);
 	  prev_item_menu_status=item_menu_status;
   }
@@ -223,9 +226,15 @@ void show_ili9341_monitor(){
   // Покажем период работы таймера
   curTicks=mainTick;
   uint32_t ticks=(mainTick-prevTicks)/100;
-  sprintf(o_status,"%4ldms  %s %4ldkHz %4ld  ", ticks, (selected_timer==TIMER1)?"TIM1":"TIM2", adc_result_buf.adc_max_calc/ticks, Bounce );
+  if(active_menu_item==Common){
+	  sprintf(o_freq_adc_buf, "%4ld kHz", adc_result_buf.adc_max_calc/ticks );
+	  ili9341_String(177,(10+0.3)*lcdprop.pFont->Height,o_freq_adc_buf);
+  }
+  sprintf(o_status,"Screen: %dms, Bounce: %d    ", ticks, Bounce );
+//  sprintf(o_status,"Screen: %4ldms, Bounce: %4ld  ", ticks, Bounce );
   ili9341_String(7,210,o_status);
   adc_result_buf.adc_max_calc=0;
+//  Bounce=0;
   prevTicks=curTicks;
 }
 

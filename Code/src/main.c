@@ -1,7 +1,7 @@
 #include "main.h"
 
 int monitorStarted=0;
-SELECT_TIMER selected_timer=TIMER2;
+SELECT_TIMER selected_timer=TIMER1;
 void vTaskTim1(void *parameter);
 
 int main(void){
@@ -82,7 +82,7 @@ void vTaskMonitor(void *parameter){
       vTaskDelay(100);
     }
     show_ili9341_monitor();
-    vTaskDelay(20);
+    vTaskDelay(100);
   }
 }
 

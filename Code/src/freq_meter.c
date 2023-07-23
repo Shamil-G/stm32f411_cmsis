@@ -52,8 +52,7 @@ inline uint32_t getFreqPWM(void){
 float getFreqDuty(void){
   float result;
   if(selected_timer==TIMER1){
-      result=TIM1->CCR1*100*2;
-      result/=TIM1->ARR;
+      return currDutyTim1/10;
   }
   if(selected_timer==TIMER2){
       result=PWMSingleTimerCCR*100/PWMSingleTimer->ARR;
