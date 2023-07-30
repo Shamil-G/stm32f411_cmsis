@@ -8,7 +8,7 @@
 #include "main.h"
 #include "string.h"
 
-
+uint8_t lockGetValue;
 //#define ADC_16Bit
 
 #ifdef ADC_16Bit
@@ -46,47 +46,36 @@ void ADCUp(ADC_TypeDef * Adc){
 
 
 uint32_t getValue(uint32_t *p){
-  if( adc_result_buf.count>adc_result_buf.adc_max_calc)
-    adc_result_buf.adc_max_calc=adc_result_buf.count;
-  adc_result_buf.count=0;
+	volatile uint32_t minVal=0;
+	volatile uint32_t maxVal=0;
+	volatile uint32_t sumAVG=0;
+	if(lockGetValue==0){
+		lockGetValue=1;
+		//  volatile uint32_t minVal=ADC_COEFF/4;
+		//  volatile uint32_t maxVal=ADC_COEFF/4;
+		uint32_t lbuf[ADC_LEN_BUF];
+		memcpy(lbuf,p,sizeof(lbuf));
 
-  volatile uint32_t minVal=ADC_COEFF/4;
-  uint32_t lbuf[ADC_LEN_BUF];
-  memcpy(lbuf,p,sizeof(lbuf));
-  int pos=0;
-  for(int i=0;i<ADC_LEN_BUF;i++){
-    if(minVal>lbuf[i] && lbuf[i]>0){
-	minVal=lbuf[i];
-	pos=i;
-    }
-  }
-  lbuf[pos]=0;
-  for(int i=0;i<ADC_LEN_BUF;i++){
-    if(minVal<=lbuf[i] && lbuf[i]>0){
-	minVal=lbuf[i];
-	pos=i;
-    }
-  }
-  lbuf[pos]=0;
-  for(int i=0;i<ADC_LEN_BUF ;i++){
-    if(minVal>=lbuf[i] && lbuf[i]>0){
-	minVal=lbuf[i];
-	pos=i;
-    }
-  }
-  lbuf[pos]=0;
-  for(int i=0;i<ADC_LEN_BUF ;i++){
-    if(minVal<=lbuf[i] && lbuf[i]>0){
-	minVal=lbuf[i];
-	pos=i;
-    }
-  }
-  lbuf[pos]=0;
-  minVal=0;
-  for(int i=0;i<ADC_LEN_BUF; i++){
-    minVal+=lbuf[i];
-  }
-  return minVal;
+		sumAVG=lbuf[0];
+		minVal=lbuf[0];
+		maxVal=lbuf[0];
+
+		for(int i=1;i<ADC_LEN_BUF;i++){
+		sumAVG+=lbuf[i];
+		if(minVal>lbuf[i]){
+			minVal=lbuf[i];
+		}
+		}
+		for(int i=1;i<ADC_LEN_BUF;i++){
+		if(maxVal<lbuf[i]){
+			maxVal=lbuf[i];
+		}
+		}
+		sumAVG-=(minVal+maxVal);
+		sumAVG/=2;
+		lockGetValue=0;
+	}
+	return sumAVG;
 }
 
 float getInputVoltage(){
@@ -143,12 +132,13 @@ void ADC_IRQHandler()
       adc_result_buf.count++;
       ADC1->CR2 |= ADC_CR2_JSWSTART;
   }
-
 }
 
 
 void InitADC(void){
-      adc_result_buf.pos=3;
+    adc_result_buf.pos=3;
+	lockGetValue=0;
+
       // Тактируем ADC
       RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
 

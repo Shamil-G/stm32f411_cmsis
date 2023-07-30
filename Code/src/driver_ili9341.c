@@ -230,8 +230,8 @@ void show_ili9341_monitor(){
 	  sprintf(o_freq_adc_buf, "%4ld kHz", adc_result_buf.adc_max_calc/ticks );
 	  ili9341_String(177,(10+0.3)*lcdprop.pFont->Height,o_freq_adc_buf);
   }
-  sprintf(o_status,"Screen: %dms, Bounce: %d    ", ticks, Bounce );
-//  sprintf(o_status,"Screen: %4ldms, Bounce: %4ld  ", ticks, Bounce );
+//  sprintf(o_status,"Screen: %ldms, Bounce: %d    ", ticks, Bounce );
+  sprintf(o_status,"Screen: %4ldms, Bounce: %4ld  ", ticks, Bounce );
   ili9341_String(7,210,o_status);
   adc_result_buf.adc_max_calc=0;
 //  Bounce=0;

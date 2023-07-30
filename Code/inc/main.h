@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __MAIN_H__
+#define __MAIN_H__
+
 #include "stm32f4xx.h"
 #include "adc-inject.h"
 #include "gpio.h"
@@ -202,3 +204,4 @@ void vTaskMonitor(void *parameter);
 void InitMainTick(void);
 void showBip(void);
 
+#endif

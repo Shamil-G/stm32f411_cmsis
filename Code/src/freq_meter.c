@@ -5,6 +5,9 @@
 #define IDLE 0
 #define DONE 1
 
+// from pwm_single.c
+extern uint16_t  currDutyTim;
+
 struct  freqMeter structFreqMeter;
 
 extern uint8_t  Tim1_posFreqPWM;
@@ -51,11 +54,13 @@ inline uint32_t getFreqPWM(void){
 
 float getFreqDuty(void){
   float result;
+  uint32_t ccr, arr;
+
   if(selected_timer==TIMER1){
       return currDutyTim1/10;
   }
   if(selected_timer==TIMER2){
-      result=PWMSingleTimerCCR*100/PWMSingleTimer->ARR;
+      result=(1000-currDutyTim)/10;
   }
   return (100-result);
 }

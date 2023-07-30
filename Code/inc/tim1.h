@@ -1,3 +1,5 @@
+#pragma once
+
 #include "main.h"
 
 #define __TIMER TIM1

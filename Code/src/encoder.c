@@ -2,6 +2,8 @@
 
 // Button IRQ for Encoder -> PB_3
 uint32_t Bounce;
+uint8_t lockEncoder;
+
 extern unsigned long cntMainTick;
 extern pwm_tune();
 
@@ -22,69 +24,76 @@ int is_bounce(){
 }
 
 void TIM3_IRQHandler(void){
-  if( (EncTimer->SR & TIM_SR_TIF) && !is_bounce()){
-      // DIR=0 go to to right, DIR>0 - go to left
-      uint8_t direction =  EncTimer->CR1 & TIM_CR1_DIR;
+  if(lockEncoder==0){
+	  lockEncoder = 1;
+	  if( (EncTimer->SR & TIM_SR_TIF) && !is_bounce()){
+		  // DIR=0 go to to right, DIR>0 - go to left
+		  uint8_t direction =  EncTimer->CR1 & TIM_CR1_DIR;
 
-      if(item_menu_status==Select){
-		  if(direction==0 && active_menu_item!=Sinus && active_menu_item!=CH_TIMER){
-			 active_menu_item+=1;
+		  if(item_menu_status==Select){
+			  if(direction==0 && active_menu_item!=Sinus && active_menu_item!=CH_TIMER){
+				 active_menu_item+=1;
+			  }
+			  else if(direction>0 && active_menu_item!=Common){
+				active_menu_item-=1;
+			  }
 		  }
-		  else if(direction>0 && active_menu_item!=Common){
-			active_menu_item-=1;
+		  else{
+		  switch (active_menu_item){
+			case Common:
+			break;
+			case PWM_FREQ:
+			  if(direction==0) freqUp();
+			  else
+			  if(direction>0) freqDown();
+			  // После установления новой частоты, надо обновить счетчик PWM - pwm_tune()
+			break;
+			case PWM_DUTY:
+			  if(direction==0) pwm_up();
+			  else
+			  if(direction>0) pwm_down();
+			break;
+			case CH_TIMER:
+				if(selected_timer==TIMER1){
+					TIM1->CR1 &= ~TIM_CR1_CEN;
+					TIM2->CR1 |= TIM_CR1_CEN;
+					selected_timer=TIMER2;
+				//Сбрасываем в default: TIM1->CC4
+				ADC1->CR2 &= ~ADC_CR2_JEXTSEL_Msk;
+				// JEXTSEL=0110: Timer 2 TRGO event
+				ADC1->CR2 |= ADC_CR2_JEXTSEL_0;
+				}
+				else{
+					TIM2->CR1 &= ~TIM_CR1_CEN;
+					TIM1->CR1 |= TIM_CR1_CEN;
+					selected_timer=TIMER1;
+				//Сбрасываем в default: TIM1->CC4
+				ADC1->CR2 &= ~ADC_CR2_JEXTSEL_Msk;
+				// JEXTSEL=0001: Timer 1 TRGO event
+				ADC1->CR2 |= ADC_CR2_JEXTSEL_0;
+				}
+			break;
+			default: break;
 		  }
-      }
-      else{
-	  switch (active_menu_item){
-	    case Common:
-		break;
-	    case PWM_FREQ:
-		  if(direction==0) freqUp();
-		  else
-		  if(direction>0) freqDown();
-		  // После установления новой частоты, надо обновить счетчик PWM - pwm_tune()
-		  pwm_tune();
-		break;
-	    case PWM_DUTY:
-		  if(direction==0) pwm_up();
-		  else
-		  if(direction>0) pwm_down();
-		break;
-	    case CH_TIMER:
-	        if(selected_timer==TIMER1){
-	            TIM1->CR1 &= ~TIM_CR1_CEN;
-	            TIM2->CR1 |= TIM_CR1_CEN;
-	            selected_timer=TIMER2;
-		    //Сбрасываем в default: TIM1->CC4
-		    ADC1->CR2 &= ~ADC_CR2_JEXTSEL_Msk;
-		    // JEXTSEL=0110: Timer 2 TRGO event
-		    ADC1->CR2 |= ADC_CR2_JEXTSEL_0;
-	        }
-	        else{
-	            TIM2->CR1 &= ~TIM_CR1_CEN;
-	            TIM1->CR1 |= TIM_CR1_CEN;
-	            selected_timer=TIMER1;
-		    //Сбрасываем в default: TIM1->CC4
-		    ADC1->CR2 &= ~ADC_CR2_JEXTSEL_Msk;
-		    // JEXTSEL=0001: Timer 1 TRGO event
-		    ADC1->CR2 |= ADC_CR2_JEXTSEL_0;
-	        }
-		break;
-	    default: break;
+		  }
+		  // Сбрасываем флаг прерывания
+
 	  }
-      }
-      // Сбрасываем флаг прерывания
-
+	  EncTimer->SR &= ~TIM_SR_TIF;
+	  lockEncoder = 0;
   }
-  EncTimer->SR &= ~TIM_SR_TIF;
 }
 
 // Button IRQ
 void EXTI3_IRQHandler() {
-  if( active_menu_item!=Common && !is_bounce() )
-      item_menu_status=(item_menu_status==Select)?Edit:Select;
-  // Очистка прерывания
-  EXTI->PR |= EXTI_PR_PR3;
+  if(lockEncoder==0){
+	  lockEncoder=1;
+	  if( active_menu_item!=Common && !is_bounce() )
+		  item_menu_status=(item_menu_status==Select)?Edit:Select;
+	  // Очистка прерывания
+	  EXTI->PR |= EXTI_PR_PR3;
+	  lockEncoder=0;
+  }
 }
 
 void ButtonIRQOn(void){
@@ -141,6 +150,7 @@ void EncoderOn(void){
 				0,
 				noPull, // Pull-down
 				af2); //AF:2
+	lockEncoder = 0;
 	// Включаем тактирование таймера
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 	// Маппируем два входа Таймера для функции Encoder

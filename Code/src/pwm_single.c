@@ -1,10 +1,11 @@
 #include "main.h"
 
+#define DEAD_TIME 1
 // PWM out port: GPIOB 3
-
+uint8_t lockTim;
 uint8_t  posFreqPWM;
 // В процентах заполнение меандра положительным сигналом
-uint8_t  currDuty;
+uint16_t  currDutyTim;
 
 uint32_t listFreqPWMPSC[]=
    { 5000000,	// 20Hz
@@ -22,38 +23,69 @@ uint32_t listFreqPWMPSC[]=
      1250,	// 80 KHz
      1000,	// 100 KHz
      500,	// 200 KHz
-     200,	// 500 KHz
-     125,	// 800 KHz
-     100,	// 1 MHz
-     50,	// 2 MHz
-     20	 	// 5 MHz
+     400,	// 250 KHz
+     250,	// 400 KHz
+     200	// 500 KHz
+//     ,125,	// 800 KHz
+//     100,	// 1 MHz
+//     80,	// 1,25 MHz
+//     50,	// 2 MHz
+//     25,	// 4 MHz
+//     20	 	// 5 MHz
     };
 
 void pwm_tune(){
-	PWMSingleTimerCCR=(listFreqPWMPSC[posFreqPWM] * (100-currDuty)) / 100;
+	if(lockTim==0){
+		lockTim=1;
+		PWMSingleTimerCCR = (PWMSingleTimer->ARR  * (1000-currDutyTim) / 1000) + DEAD_TIME;
+		lockTim=0;
+	}
 }
 
+void freq_tune(){
+	if(lockTim==0){
+		lockTim=1;
+  	    PWMSingleTimer->ARR=listFreqPWMPSC[posFreqPWM]-1;
+		lockTim=0;
+		pwm_tune();
+	}
+}
+
+
 void pwm_tim2_up(){
-	currDuty = ((currDuty==0)?2:(currDuty==2)?5:(currDuty==5)?10:(currDuty+10)>=100?95:(currDuty+10));
-	pwm_tune();
+	if(currDutyTim<1000){
+		if(currDutyTim>=100 && currDutyTim<900)
+			currDutyTim+=100;
+		else
+			currDutyTim=(currDutyTim/10+1)*10;
+		if(currDutyTim>1000)
+			currDutyTim=1000;
+		pwm_tune();
+	}
 }
 
 void pwm_tim2_down(){
-	currDuty = ((currDuty==2)?0:(currDuty==5)?2:(currDuty==10)?5:(currDuty==95)?90:currDuty-10);
-	pwm_tune();
+	if(currDutyTim>0){
+		if(currDutyTim>100 && currDutyTim<=900)
+			currDutyTim-=100;
+		else
+			currDutyTim=(currDutyTim/10-1)*10;
+		pwm_tune();
+	}
 }
 
+
 void tim2_freqUp(){
-  if(posFreqPWM<sizeof(listFreqPWMPSC)/4-1){
+  if(posFreqPWM<sizeof(listFreqPWMPSC)/sizeof(uint32_t)-1){
   	    posFreqPWM++;
-  	    PWMSingleTimer->ARR=listFreqPWMPSC[posFreqPWM]-1;
+	    freq_tune();
       }
 }
 
 void tim2_freqDown(){
   if(posFreqPWM>0){
 	    posFreqPWM--;
-	    PWMSingleTimer->ARR=listFreqPWMPSC[posFreqPWM]-1;
+	    freq_tune();
   }
 }
 
@@ -74,14 +106,12 @@ void init_pwm(void)
 	// SMS: Slave mode selection -> disable
 	// ECE: External clock enable -> disable
 	CLEAR_BIT(PWMSingleTimer->SMCR, TIM_SMCR_SMS | TIM_SMCR_ECE);
-
-	posFreqPWM=13;
 	WRITE_REG(PWMSingleTimer->PSC, 1 - 1);
-	PWMSingleTimer->ARR  = listFreqPWMPSC[posFreqPWM]-1; 	// 100 kHz
-	// Был косяк ! не в том регистре выставил значение
-	// и ничего не генерилось
-	currDuty = 20; // 20%
-	pwm_tune();
+
+	lockTim = 0;
+	posFreqPWM=13;
+	currDutyTim = 200; // 20%
+	freq_tune();
 //	PWMSingleTimerCCR = PWMSingleTimer->ARR/currDuty;		// 10% - Коэффициент заполнения
 //	PWMSingleTimer->CCR3 = PWMSingleTimer->ARR/10;		// 10% - Коэффициент заполнения
 

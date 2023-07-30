@@ -4,14 +4,13 @@
  *  Created on: 26 февр. 2021 г.
  *      Author: sguss
  */
-#pragma once
-
 #include "main.h"
 
 #ifndef INC_DEV_INCLUDE_ADC_INJECT_H_
 #define INC_DEV_INCLUDE_ADC_INJECT_H_
 
-#define ADC_LEN_BUF 8
+#define ADC_LEN_BUF 4
+//#define ADC_LEN_BUF 8
 
 typedef enum {
 	simple_calibration = 0,

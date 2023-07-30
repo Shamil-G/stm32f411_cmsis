@@ -8,7 +8,6 @@
 #include "fonts.h"
 #include "color565.h"
 
-#pragma once
 #ifndef INC_SPI_ILI9341_H_
 #define INC_SPI_ILI9341_H_
 // Size of LCD
@@ -126,7 +125,5 @@ void ili7735_Button_Destroy(ST7735_Button* btn);
 void ili7735_ProgressBar_Destroy(ST7735_ProgressBar* pb);
 void ili7735_ProgressBar_Init(ST7735_ProgressBar* pb,uint16_t x,uint16_t y, uint16_t w, uint16_t h, uint16_t ProgressColor, uint16_t BorderColor, uint16_t BackgroundColor);
 void ili7735_ProgressBar_SetProgress(ST7735_ProgressBar* pb, uint16_t progress);
-
-
 
 #endif

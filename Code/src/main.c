@@ -82,7 +82,7 @@ void vTaskMonitor(void *parameter){
       vTaskDelay(100);
     }
     show_ili9341_monitor();
-    vTaskDelay(100);
+    vTaskDelay(150);
   }
 }
 
