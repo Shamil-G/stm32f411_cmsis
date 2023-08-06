@@ -51,7 +51,7 @@ int main(void){
 	  Delay(50);
 	  show_ili9341_monitor();
 	  showBip();
-	  pwm2_test();
+//	  pwm2_test();
   //	    SET_CH1_DUTY(incr);
 	}
 #endif

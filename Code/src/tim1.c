@@ -22,14 +22,18 @@ uint32_t Tim1_listFreqPWMPSC[]=
      10000,  	// 10 kHz
      5000,	// 20 KHz
      4000,	// 25 KHz
-     2000,	// 50 KHz
+     2000,	// 50 KHz 	: 10
      1250,	// 80 KHz
      1000,	// 100 KHz
      500,	// 200 KHz
-     400	// 250 KHz
-//     ,250	// 400 KHz
-//     ,200	// 500 KHz
-//     ,125	// 800 KHz
+     400,	// 250 KHz
+     250,	// 400 KHz	: 15
+     200,	// 500 KHz
+     125,	// 800 KHz
+     100,	// 800 KHz
+     100,	// 800 KHz
+	 80,	//			: 20
+	 50
      };
 
 //
@@ -84,8 +88,8 @@ void change_pwm_mode(ModePWM mode_pwm){
 // Первый канал считает в обратную сторону
 
 void tim1_pwm_tune(){
-	volatile uint16_t first_counter_value, second_counter_value;
 	if (lockTim1==0){
+		volatile uint16_t first_counter_value, second_counter_value;
 		lockTim1=1;
 		first_counter_value = (TIM1->ARR * currDutyTim1 / (1000 * 2)) - T1_DEAD_Time;
 		second_counter_value = TIM1->ARR+T1_DEAD_Time-first_counter_value;
@@ -145,7 +149,7 @@ void tim1_init(){
   RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
   TIM1->PSC=PWM_PSC;
   lockTim1 = 0;
-  Tim1_posFreqPWM=12;
+  Tim1_posFreqPWM=13;
   currDutyTim1 = 100;
   curr_mode_pwm=freeMode;
   tim1_freq_tune();

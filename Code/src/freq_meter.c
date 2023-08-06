@@ -48,13 +48,12 @@ void TIM5_IRQHandler(void){
 
 inline uint32_t getFreqPWM(void){
   uint32_t result;
-  result = (selected_timer==TIMER2?CPU_CLOCK/(TIM2->ARR+1):CPU_CLOCK/(TIM1->ARR+1));
+  result = (selected_timer==TIMER2?CPU_CLOCK/(TIM2->ARR+1):CPU_CLOCK/(2*(TIM1->ARR+1)));
   return result;
 }
 
 float getFreqDuty(void){
   float result;
-  uint32_t ccr, arr;
 
   if(selected_timer==TIMER1){
       return currDutyTim1/10;

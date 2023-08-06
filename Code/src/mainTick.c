@@ -27,8 +27,12 @@ void TIM4_IRQHandler(void){
 
 #ifndef USE_FREERTOS
 
+#ifndef __delay
+#define __delay
 void Delay(uint32_t milliseconds) {
   durationMs=0;
   while(durationMs < milliseconds*100);
 }
+#endif
+
 #endif

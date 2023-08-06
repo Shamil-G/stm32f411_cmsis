@@ -5,7 +5,7 @@ uint32_t Bounce;
 uint8_t lockEncoder;
 
 extern unsigned long cntMainTick;
-extern pwm_tune();
+extern void pwm_tune();
 
 #define BounceUp 	10000
 #define BounceDown 	10000

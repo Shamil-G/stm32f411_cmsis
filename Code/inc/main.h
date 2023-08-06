@@ -11,7 +11,7 @@
 #include "spi_ili9341.h"
 #include "driver_ili9341.h"
 
-#define USE_FREERTOS
+//#define USE_FREERTOS
 
 #ifdef	USE_FREERTOS
 
@@ -93,7 +93,7 @@ void Delay(uint32_t ms);
 #define TIMER_50Hz	TIM11
 void tim11_50Hz_init(void);
 
-extern unsigned long mainTick;
+extern uint32_t mainTick;
 extern uint8_t  posFreqPWM;
 extern uint16_t  currDutyTim1;
 extern uint32_t listFreqPWMPSC[];

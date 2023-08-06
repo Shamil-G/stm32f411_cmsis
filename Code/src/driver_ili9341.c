@@ -225,7 +225,7 @@ void show_ili9341_monitor(){
   }
   // Покажем период работы таймера
   curTicks=mainTick;
-  uint32_t ticks=(mainTick-prevTicks)/100;
+  uint32_t ticks=mainTick>prevTicks?(mainTick-prevTicks)/100:(4294967295-prevTicks+mainTick)/100;
   if(active_menu_item==Common){
 	  sprintf(o_freq_adc_buf, "%4ld kHz", adc_result_buf.adc_max_calc/ticks );
 	  ili9341_String(177,(10+0.3)*lcdprop.pFont->Height,o_freq_adc_buf);

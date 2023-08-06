@@ -12,9 +12,9 @@ uint8_t lockGetValue;
 //#define ADC_16Bit
 
 #ifdef ADC_16Bit
-#define ADC_COEFF (65536*4)
+#define ADC_COEFF 65536
 #else
-#define ADC_COEFF (4096*4)
+#define ADC_COEFF 4096
 #endif
 
 #define reference_voltage 	3.31
@@ -45,54 +45,36 @@ void ADCUp(ADC_TypeDef * Adc){
 };
 
 
-uint32_t getValue(uint32_t *p){
-	volatile uint32_t minVal=0;
-	volatile uint32_t maxVal=0;
-	volatile uint32_t sumAVG=0;
+int32_t getADCValue(uint32_t *p){
 	if(lockGetValue==0){
+		volatile uint32_t sumAVG=0;
 		lockGetValue=1;
-		//  volatile uint32_t minVal=ADC_COEFF/4;
-		//  volatile uint32_t maxVal=ADC_COEFF/4;
-		uint32_t lbuf[ADC_LEN_BUF];
-		memcpy(lbuf,p,sizeof(lbuf));
 
-		sumAVG=lbuf[0];
-		minVal=lbuf[0];
-		maxVal=lbuf[0];
-
-		for(int i=1;i<ADC_LEN_BUF;i++){
-		sumAVG+=lbuf[i];
-		if(minVal>lbuf[i]){
-			minVal=lbuf[i];
+		for(int i=0;i<ADC_LEN_BUF;i++){
+			sumAVG+=*(p+1);
 		}
-		}
-		for(int i=1;i<ADC_LEN_BUF;i++){
-		if(maxVal<lbuf[i]){
-			maxVal=lbuf[i];
-		}
-		}
-		sumAVG-=(minVal+maxVal);
-		sumAVG/=2;
+		sumAVG/=ADC_LEN_BUF;
 		lockGetValue=0;
+		return sumAVG;
 	}
-	return sumAVG;
+	return -1;
 }
 
 float getInputVoltage(){
-  return getValue(adc_result_buf.i_voltage)*reference_voltage/ADC_COEFF+0.0005;
+  return getADCValue(adc_result_buf.i_voltage)*reference_voltage/ADC_COEFF;
 //	return ((float) (result.i_voltage[0]+result.i_voltage[1]+result.i_voltage[2]+result.i_voltage[3]))*reference_voltage/ADC_COEFF+reference_shift;
 }
 float getInputCurrent(){
-  return getValue(adc_result_buf.i_current)*reference_voltage/ADC_COEFF+0.0036;
+  return getADCValue(adc_result_buf.i_current)*reference_voltage/ADC_COEFF;
 //	return ((float) (result.i_current[0]+result.i_current[1]+result.i_current[2]+result.i_current[3]))*reference_voltage/ADC_COEFF+reference_shift;
 }
 
 float getOutputVoltage(){
-  return getValue(adc_result_buf.o_voltage)*reference_voltage/ADC_COEFF+0.0036;
+  return getADCValue(adc_result_buf.o_voltage)*reference_voltage/ADC_COEFF;
 //	return ((float) (result.o_voltage[0]+result.o_voltage[1]+result.o_voltage[2]+result.o_voltage[3]))*reference_voltage/ADC_COEFF+reference_shift;
 }
 float getOutputCurrent(){
-  return getValue(adc_result_buf.o_current)*reference_voltage/ADC_COEFF+0.0036;
+  return getADCValue(adc_result_buf.o_current)*reference_voltage/ADC_COEFF;
 //	return ((float) (result.o_current[0]+result.o_current[1]+result.o_current[2]+result.o_current[3]))*reference_voltage/ADC_COEFF+reference_shift;
 }
 
@@ -124,7 +106,10 @@ void ADC_IRQHandler()
   // Clear flag
   if(ADC1->SR & ADC_SR_JEOC){
       ADC1->SR &= ~ADC_SR_JEOC;
-      if(++adc_result_buf.pos>ADC_LEN_BUF-1) adc_result_buf.pos = 0;
+      if(++adc_result_buf.pos>ADC_LEN_BUF-1){
+    	  adc_result_buf.pos = 0;
+      }
+  	  adc_result_buf.adc_max_calc++;
       adc_result_buf.i_voltage[adc_result_buf.pos]=ADC1->JDR1; // Input Voltage
       adc_result_buf.i_current[adc_result_buf.pos]=ADC1->JDR2; // Input Current
       adc_result_buf.o_voltage[adc_result_buf.pos]=ADC1->JDR3; // Output Voltage
