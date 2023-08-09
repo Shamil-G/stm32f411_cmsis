@@ -52,6 +52,9 @@ void tim1_gpio_init(){
 
   InitGPio( TIM1_CH2_Port, TIM1_CH2_Pin, alternateF, push_pull, veryHigh, noPull,  TIM1_CH2_AF);
   InitGPio( TIM1_CH2N_Port, TIM1_CH2N_Pin, alternateF, push_pull, veryHigh, noPull,  TIM1_CH2N_AF);
+
+  // BKIN on Board WeAct port PA6 used for MISO Flash
+  // InitGPio( TIM1_BKIN_Port, TIM1_BKIN_Pin, alternateF, push_pull, veryHigh, pullDown,  TIM1_BKIN_AF);
 }
 
 void change_pwm_mode(ModePWM mode_pwm){
@@ -145,6 +148,25 @@ void tim1_freqDown(void){
   }
 }
 
+
+void TIM1_IRQHandler()
+{
+  // Clear flag
+  if(ADC1->SR & ADC_SR_JEOC){
+      ADC1->SR &= ~ADC_SR_JEOC;
+      if(++adc_result_buf.pos>ADC_LEN_BUF-1){
+    	  adc_result_buf.pos = 0;
+      }
+  	  adc_result_buf.adc_max_calc++;
+      adc_result_buf.i_voltage[adc_result_buf.pos]=ADC1->JDR1; // Input Voltage
+      adc_result_buf.i_current[adc_result_buf.pos]=ADC1->JDR2; // Input Current
+      adc_result_buf.o_voltage[adc_result_buf.pos]=ADC1->JDR3; // Output Voltage
+      adc_result_buf.o_current[adc_result_buf.pos]=ADC1->JDR4; // Output Current
+      adc_result_buf.count++;
+      ADC1->CR2 |= ADC_CR2_JSWSTART;
+  }
+}
+
 void tim1_init(){
   RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
   TIM1->PSC=PWM_PSC;
@@ -198,6 +220,9 @@ void tim1_init(){
   if(selected_timer==TIMER1)
     TIM1->CR1 |= TIM_CR1_CEN;
   TIM1->EGR = TIM_EGR_UG;
+
+//  NVIC_EnableIRQ(TIM1_TRG_COM_TIM11_IRQn);
+	//Enable ADC1
 }
 
 

@@ -56,7 +56,7 @@ float getFreqDuty(void){
   float result;
 
   if(selected_timer==TIMER1){
-      return currDutyTim1/10;
+      return currDutyTim1/(2*10);
   }
   if(selected_timer==TIMER2){
       result=(1000-currDutyTim)/10;
