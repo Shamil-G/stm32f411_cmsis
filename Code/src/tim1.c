@@ -117,7 +117,7 @@ void pwm2_tim1_up(){
 		if(currDutyTim1>=100 && currDutyTim1<900)
 			currDutyTim1+=100;
 		else
-			currDutyTim1=(currDutyTim1/10+1)*10;
+			currDutyTim1=(currDutyTim1/10+2)*10;
 		if(currDutyTim1>1000)
 			currDutyTim1=1000;
 		tim1_pwm_tune();
@@ -129,7 +129,7 @@ void pwm2_tim1_down(){
 		if(currDutyTim1>100 && currDutyTim1<=900)
 			currDutyTim1-=100;
 		else
-			currDutyTim1=(currDutyTim1/10-1)*10;
+			currDutyTim1=(currDutyTim1/10-2)*10;
 		tim1_pwm_tune();
 	}
 };

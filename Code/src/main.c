@@ -67,7 +67,12 @@ void vTaskLed1 (void *parameter){
 void vTaskTim1(void *parameter){
   while(1){
 //    pwm2_test();
-    vTaskDelay(1);
+#ifdef USE_FREERTOS
+    vTaskDelay(10);
+#endif
+#ifndef USE_FREERTOS
+	  Delay(100);
+#endif
   }
 }
 
@@ -77,12 +82,27 @@ void vTaskMonitor(void *parameter){
     if(!monitorStarted){
       monitorStarted=1;
       ili9341_init(240,320);
+#ifdef  USE_FREERTOS
       vTaskDelay(100);
+#endif
+#ifndef USE_FREERTOS
+	  Delay(100);
+#endif
       ili9341_primary_tune();
+#ifdef USE_FREERTOS
       vTaskDelay(100);
+#endif
+#ifndef USE_FREERTOS
+	  Delay(100);
+#endif
     }
     show_ili9341_monitor();
+#ifdef USE_FREERTOS
     vTaskDelay(150);
+#endif
+#ifndef USE_FREERTOS
+	  Delay(150);
+#endif
   }
 }
 

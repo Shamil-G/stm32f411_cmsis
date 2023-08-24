@@ -11,6 +11,7 @@
 #include "spi_ili9341.h"
 #include "driver_ili9341.h"
 
+#define _PLUG_NEWLIB
 //#define USE_FREERTOS
 
 #ifdef	USE_FREERTOS
