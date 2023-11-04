@@ -1,5 +1,6 @@
 #include "main.h"
 
+
 #ifdef USE_SYSTICK
 
 volatile uint32_t ticks_delay = 0;
@@ -7,7 +8,6 @@ volatile uint32_t ticks_delay = 0;
 extern uint32_t SystemCoreClock;
 
 void init_SysTick(){
-  SystemCoreClock = CPU_CLOCK;
   SysTick_Config(SystemCoreClock/1000);
 }
 

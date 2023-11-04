@@ -134,6 +134,8 @@ typedef  enum{
 } MenuEdit;
 extern MenuEdit item_menu_status;
 
+void init_SysTick(void);
+
 uint32_t getFreqPWM(void);
 //void spi_master_init(void);
 
