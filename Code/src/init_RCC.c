@@ -111,24 +111,26 @@ void SystemInit(){
 	  #endif
 
 	// 1. Включаем HSI
+	// 2. WAIT HSI READY как источник тактирования
 
-	// 2. Выбираем HSI как источник тактирования
-	// 2. Сбрасываем все HCLK, APB предделители
+	// 3. Сбрасываем в RCC->CFGR все HCLK, APB предделители
 
-	// 3. Сбрасываем HSE PLL CSS
-	//
-	// 4. Сбрасываем все предделители и умножители
+	// 4. Сбрасываем HSE PLL CSS
 
-	// 5. Устанавливаем в начальное состояние источники сигналов для  USART, TIM, HRTIM ...
+	// 5. Сбрасыаем HSEBYP
 
-	// 6. Блокируем все прерывания
+	// 6. Сбрасываем все предделители и умножители
+
+	// 7. Устанавливаем в начальное состояние источники сигналов для  USART, TIM, HRTIM ...
+
+	// 8. Блокируем все прерывания
 
 
 	// 1.
 	SET_BIT(RCC->CR, RCC_CR_HSION);
-
-	while(READ_BIT(RCC->CFGR, RCC_CFGR_SWS_HSI));
 	// 2.
+	while(READ_BIT(RCC->CFGR, RCC_CFGR_SWS_HSI));
+
 	// 0000 0000 0000 0000 0001 0000 0000 1100
 	// [1:0]:	SW - System clock switch from HSI
 //	RCC->CFGR &= ~RCC_CFGR_SW;
@@ -141,20 +143,22 @@ void SystemInit(){
 //	RCC->CFGR &= ~RCC_CFGR_PPRE2_2;
 	// [26:24]	MCO		- Microcontroller clock output disabled
 
+	// 3.
 	RCC->CFGR = 0x00000000U;
 //	RCC->CFGR &= ~( RCC_CFGR_SW_Msk |  RCC_CFGR_HPRE_Msk | RCC_CFGR_PPRE1_Msk | RCC_CFGR_PPRE2_Msk | RCC_CFGR_MCO1_Msk );
 //	RCC->CFGR |= RCC_CFGR_PPRE1_2;
 
-	// 3.
+	// 4.
 	/* Reset PLLON,  CSSON and HSEON bits */
 	// 1111 1110 1111 0110 1111 1111 1111 1111
 	RCC->CR &= ~(RCC_CR_PLLON_Msk | RCC_CR_CSSON_Msk | RCC_CR_HSEON_Msk);
 
+	// 5.
 	/* Reset HSEBYP bit */
 	// 0: HSE crystal oscillator not bypassed
 	RCC->CR &= ~RCC_CR_HSEBYP;
 
-	// 4.
+	// 6.
 	/* Reset PLLSRC, PLLXTPRE, PLLMUL, MCO */
 	// 1111 0100 0000 0001 1001 1000 0000 1100
 	// [27:24]	PLLQ = 4
@@ -162,7 +166,7 @@ void SystemInit(){
 	// [17:16]	PLLP = 2
 	// [14:6]	PLLN = 96
 	// [5:0] 	PLLM = 12
-    RCC->PLLCFGR = 0x24003010;
+    	RCC->PLLCFGR = 0x24003010;
 
 	RCC->PLLCFGR &= ~(RCC_PLLCFGR_PLLQ_Msk | RCC_PLLCFGR_PLLSRC_Msk | RCC_PLLCFGR_PLLP_Msk |
 						RCC_PLLCFGR_PLLN_Msk | RCC_PLLCFGR_PLLN_Msk | RCC_PLLCFGR_PLLM_Msk );
@@ -195,5 +199,5 @@ void SystemInit(){
 #if defined(USER_VECT_TAB_ADDRESS)
   SCB->VTOR = VECT_TAB_BASE_ADDRESS | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
 #endif /* USER_VECT_TAB_ADDRESS */
-	SystemCoreClockUpdate();
+  SystemCoreClockUpdate();
 }
