@@ -48,7 +48,7 @@ void TIM5_IRQHandler(void){
 
 inline uint32_t getFreqPWM(void){
   uint32_t result;
-  result = (selected_timer==TIMER2?CPU_CLOCK/(TIM2->ARR+1):CPU_CLOCK/(2*(TIM1->ARR+1)));
+  result = (selected_timer==TIMER2?SystemCoreClock/(TIM2->ARR+1):SystemCoreClock/(2*(TIM1->ARR+1)));
   return result;
 }
 
@@ -68,7 +68,7 @@ inline uint32_t getFreqMeter(void){
   if(structFreqMeter.curTicks > structFreqMeter.prevTicks){
       Ticks = structFreqMeter.curTicks - structFreqMeter.prevTicks;
 //      structFreqMeter.freq = (uint32_t)(CPU_CLOCK*Ticks/100)/structFreqMeter.psc;
-      structFreqMeter.freq = (uint32_t)(CPU_CLOCK/Ticks)/structFreqMeter.psc;
+      structFreqMeter.freq = (uint32_t)(SystemCoreClock/Ticks)/structFreqMeter.psc;
   }
   return structFreqMeter.freq;
 //			(CPU_CLOCK/listFreqPWMPSC[posFreqPWM]);
@@ -98,7 +98,7 @@ void FreqMeterOn(void){
 	TimerFreqMeter->CCER &= ~TIM_CCER_CC2E;
 
 	//Reset Value for ARR
-	TimerFreqMeter->ARR=CPU_CLOCK-1;
+	TimerFreqMeter->ARR=SystemCoreClock-1;
 	// Обнуляем счетчик
 	TimerFreqMeter->CNT=0;
 	// Считать будем столько раз, сколько сконфигурим

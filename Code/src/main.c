@@ -7,8 +7,8 @@ void vTaskTim1(void *parameter);
 int main(void){
       SystemUp();
 //      initRCC_F411();
-      InitMainTick();
-//      init_SysTick();
+//      InitMainTick();
+      init_SysTick();
 
       init_pwm();
       EncoderOn();

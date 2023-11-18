@@ -1,32 +1,34 @@
 #include "main.h"
 
 // Button IRQ for Encoder -> PB_3
-uint32_t Bounce;
 uint8_t lockEncoder;
 
-extern unsigned long cntMainTick;
+extern uint32_t encoder_ticks;
+uint32_t bounce_encoder;
 extern void pwm_tune();
 
-#define BounceUp 	10000
-#define BounceDown 	10000
-#define BounceButton 	10000
 
 struct encValue EncValue;
 //*
 int is_bounce(){
-  Bounce=mainTick-EncValue.prevMainTick;
-  if(Bounce>20000 || cntMainTick>EncValue.prevCntMainTick ){
-      EncValue.prevMainTick=mainTick;
-      EncValue.prevCntMainTick=cntMainTick;
-      return 0;
-  }
-  return 1;
+  uint8_t ret = 0;
+  if(encoder_ticks<75)
+	  ret = 1;
+  if(encoder_ticks<1000)
+      bounce_encoder=encoder_ticks;
+  else
+	  bounce_encoder=0;
+  encoder_ticks=0;
+  return ret;
 }
 
 void TIM3_IRQHandler(void){
+  uint32_t tim3_irq = EncTimer->SR & TIM_SR_TIF;
+  // Сбрасываем флаг прерывания
+  EncTimer->SR &= ~TIM_SR_TIF;
   if(lockEncoder==0){
 	  lockEncoder = 1;
-	  if( (EncTimer->SR & TIM_SR_TIF) && !is_bounce()){
+	  if( tim3_irq && !is_bounce()){
 		  // DIR=0 go to to right, DIR>0 - go to left
 		  uint8_t direction =  EncTimer->CR1 & TIM_CR1_DIR;
 
@@ -76,22 +78,21 @@ void TIM3_IRQHandler(void){
 			default: break;
 		  }
 		  }
-		  // Сбрасываем флаг прерывания
-
 	  }
-	  EncTimer->SR &= ~TIM_SR_TIF;
 	  lockEncoder = 0;
   }
 }
 
 // Button IRQ
 void EXTI3_IRQHandler() {
+  EXTI->PR |= EXTI_PR_PR3;
   if(lockEncoder==0){
 	  lockEncoder=1;
-	  if( active_menu_item!=Common && !is_bounce() )
+//	  if( active_menu_item!=Common && !is_bounce() )
+	  if( active_menu_item!=Common)
 		  item_menu_status=(item_menu_status==Select)?Edit:Select;
 	  // Очистка прерывания
-	  EXTI->PR |= EXTI_PR_PR3;
+//	  EXTI->PR |= EXTI_PR_PR3;
 	  lockEncoder=0;
   }
 }

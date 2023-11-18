@@ -7,7 +7,12 @@ ST7735_ProgressBar pbar;
 float    i_voltage, i_current;
 float    o_voltage, o_current;
 extern volatile uint32_t freqMeter;
-extern uint32_t Bounce;
+extern uint32_t encoder_ticks;
+extern uint32_t bounce_encoder;
+extern uint32_t freq_ticks;
+
+uint32_t adc_ticks;
+
 uint32_t prevTicks=0, curTicks;
 
 char i_voltage_buf[48];
@@ -224,17 +229,18 @@ void show_ili9341_monitor(){
     default: showCommon();
   }
   // Покажем период работы таймера
-  curTicks=mainTick;
-  uint32_t ticks=mainTick>prevTicks?(mainTick-prevTicks)/100:(4294967295-prevTicks+mainTick)/100;
+  curTicks=freq_ticks;
+  adc_ticks = adc_result_buf.adc_max_calc;
+//  uint32_t ticks=mainTick>prevTicks?(mainTick-prevTicks)/100:(4294967295-prevTicks+mainTick)/100;
   if(active_menu_item==Common){
-	  sprintf(o_freq_adc_buf, "%4ld kHz", adc_result_buf.adc_max_calc/ticks );
+	  sprintf(o_freq_adc_buf, "%4ld kHz", adc_ticks/curTicks );
 	  ili9341_String(177,(10+0.3)*lcdprop.pFont->Height,o_freq_adc_buf);
   }
 //  sprintf(o_status,"Screen: %ldms, Bounce: %d    ", ticks, Bounce );
-  sprintf(o_status,"Screen: %4ldms, Bounce: %4ld  ", ticks, Bounce );
+  sprintf(o_status,"Screen:%4ldms, Bounce:%3ldms", curTicks, bounce_encoder );
   ili9341_String(7,210,o_status);
+
   adc_result_buf.adc_max_calc=0;
-//  Bounce=0;
-  prevTicks=curTicks;
+  freq_ticks=0;
 }
 

@@ -1,3 +1,4 @@
 *.ld
 Debug/
 Release/
+.metadata/

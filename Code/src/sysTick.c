@@ -4,6 +4,9 @@
 #ifdef USE_SYSTICK
 
 volatile uint32_t ticks_delay = 0;
+volatile uint32_t encoder_ticks = 0;
+volatile uint32_t freq_ticks = 0;
+
 
 extern uint32_t SystemCoreClock;
 
@@ -15,6 +18,8 @@ void init_SysTick(){
 
 void SysTick_Handler(void) {
   ticks_delay++;
+  encoder_ticks++;
+  freq_ticks++;
 }
 
 #ifndef __delay

@@ -1,5 +1,6 @@
 #include "main.h"
 
+#ifdef USE_FREERTOS
 
 unsigned long mainTick;
 unsigned long cntMainTick;
@@ -24,15 +25,5 @@ void TIM4_IRQHandler(void){
     mainTick++;
     durationMs++;
 }
-
-#ifndef USE_FREERTOS
-
-#ifndef __delay
-#define __delay
-void Delay(uint32_t milliseconds) {
-  durationMs=0;
-  while(durationMs < milliseconds*100);
-}
-#endif
 
 #endif

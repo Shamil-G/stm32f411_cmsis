@@ -11,20 +11,18 @@
 #include "spi_ili9341.h"
 #include "driver_ili9341.h"
 
+#define USE_SYSTICK
 #define _PLUG_NEWLIB
 //#define USE_FREERTOS
 
 #ifdef	USE_FREERTOS
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
+//#include "FreeRTOS.h"
+//#include "task.h"
+//#include "queue.h"
 
-#endif
-
-
-#ifdef USE_FREERTOS
 #define Delay(ms)     vTaskDelay(ms)
+
 #endif
 
 #ifndef USE_FREERTOS
@@ -43,7 +41,7 @@ void Delay(uint32_t ms);
 //7. USART1				-> PB_6 TX, PB_7 RX
 //8. SPI1				-> PB_12 NSS, PB_13 NSCK, PB14_MISO, PB_15 MOSI
 
-#define CPU_CLOCK 	100000000
+//#define CPU_CLOCK 	100000000
 
 //#define USE_SYSTICK
 
