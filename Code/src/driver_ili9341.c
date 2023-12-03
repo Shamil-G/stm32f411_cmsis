@@ -6,14 +6,15 @@ ST7735_Button button;
 ST7735_ProgressBar pbar;
 float    i_voltage, i_current;
 float    o_voltage, o_current;
-extern volatile uint32_t freqMeter;
+uint32_t screen_ticks;
+
 extern uint32_t encoder_ticks;
 extern uint32_t bounce_encoder;
 extern uint32_t freq_ticks;
+extern uint32_t freqMeter;
+extern uint32_t adc_ticks;
 
-uint32_t adc_ticks;
 
-uint32_t prevTicks=0, curTicks;
 
 char i_voltage_buf[48];
 char i_current_buf[48];
@@ -215,6 +216,7 @@ void ili9341_primary_tune(){
 }
 
 void show_ili9341_monitor(){
+	uint32_t cur_adc_ticks;
   switch (active_menu_item){
     case Common: showCommon();
       break;
@@ -229,18 +231,17 @@ void show_ili9341_monitor(){
     default: showCommon();
   }
   // Покажем период работы таймера
-  curTicks=freq_ticks;
-  adc_ticks = adc_result_buf.adc_max_calc;
-//  uint32_t ticks=mainTick>prevTicks?(mainTick-prevTicks)/100:(4294967295-prevTicks+mainTick)/100;
+  cur_adc_ticks = (adc_result_buf.adc_max_calc==0)?1:adc_result_buf.adc_max_calc;
   if(active_menu_item==Common){
-	  sprintf(o_freq_adc_buf, "%4ld kHz", adc_ticks/curTicks );
+	  sprintf(o_freq_adc_buf, "%4ld kHz", cur_adc_ticks/adc_ticks );
 	  ili9341_String(177,(10+0.3)*lcdprop.pFont->Height,o_freq_adc_buf);
   }
 //  sprintf(o_status,"Screen: %ldms, Bounce: %d    ", ticks, Bounce );
-  sprintf(o_status,"Screen:%4ldms, Bounce:%3ldms", curTicks, bounce_encoder );
+  sprintf(o_status,"Screen:%4ldms, Bounce:%4ldms ", screen_ticks, bounce_encoder );
   ili9341_String(7,210,o_status);
 
+  screen_ticks=0;
   adc_result_buf.adc_max_calc=0;
-  freq_ticks=0;
+  adc_ticks = 0;
 }
 

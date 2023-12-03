@@ -3,6 +3,10 @@
 int monitorStarted=0;
 SELECT_TIMER selected_timer=TIMER1;
 void vTaskTim1(void *parameter);
+void toggle_led1(void);
+void enable_led1(void);
+//void meterPortOn();
+void FreqMeterOn(void);
 
 int main(void){
       SystemUp();
@@ -30,6 +34,7 @@ int main(void){
 #endif
 
 	InitADC();
+//	meterPortOn();
 	FreqMeterOn();
 //	Phase3_InitHrpwm();
 
@@ -50,12 +55,9 @@ int main(void){
 #endif
 
 #ifndef USE_FREERTOS
+	enable_led1();
 	while(1){
-	  Delay(50);
 	  show_ili9341_monitor();
-	  showBip();
-//	  pwm2_test();
-  //	    SET_CH1_DUTY(incr);
 	}
 #endif
 }

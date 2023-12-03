@@ -91,7 +91,5 @@ void PortReset (GPIO_TypeDef* port, uint8_t NumPin) {
 }
 
 void PortToggle (GPIO_TypeDef* port, uint8_t NumPin) {
-    uint32_t temp = 0;
-    temp |= 1<<NumPin;
-    port->ODR ^= temp;
+    port->ODR ^= (0x1UL<<NumPin);
 }

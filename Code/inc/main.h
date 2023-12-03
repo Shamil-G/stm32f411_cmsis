@@ -84,8 +84,8 @@ void Delay(uint32_t ms);
 #define FreqMeterPin  1
 #define FreqMeterAF   af2
 
-#define TimerFreqMeter 		TIM5
-#define TimerFreqMeterEnable	RCC->APB1ENR |= RCC_APB1ENR_TIM5EN
+#define Timer5 			TIM5
+#define Timer5Enable	RCC->APB1ENR |= RCC_APB1ENR_TIM5EN
 #define TimerFreqMeterIRQ	TIM5_IRQn
 
 // 50Hz Timer for sinusoidal
@@ -96,14 +96,6 @@ extern uint32_t mainTick;
 extern uint8_t  posFreqPWM;
 extern uint16_t  currDutyTim1;
 extern uint32_t listFreqPWMPSC[];
-
-struct  freqMeter {
-	uint32_t prevTicks;
-	uint32_t curTicks;
-	uint32_t freq;
-	uint32_t counter;
-	uint16_t   psc;
-};
 
 struct encValue{
 	uint32_t prevValue;

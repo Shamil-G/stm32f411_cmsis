@@ -34,6 +34,8 @@ uint8_t lockGetValue;
 
 struct adc_result_buf adc_result_buf;
 
+volatile uint32_t adc_ticks;
+
 void ADCDown(ADC_TypeDef * Adc){
 	CLEAR_BIT(Adc->CR2, ADC_CR2_ADON);
 };

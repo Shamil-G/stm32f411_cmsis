@@ -25,9 +25,7 @@ void showSOS(){
 
 void showBip(){
 	led1_on();
-	Delay(1000);
 	led1_off();
-	Delay(1000);
 }
 
 void showUp(){

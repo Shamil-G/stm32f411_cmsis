@@ -12,10 +12,11 @@ uint16_t  currDutyTim1;
 uint8_t  Tim1_posFreqPWM;
 // Список формируемых частот
 uint32_t Tim1_listFreqPWMPSC[]=
-   { 2000000,	// 50Hz
-     1000000,	// 100Hz
-     500000,	// 200Hz
-     200000,	// 500Hz
+   {
+//	 2000000,	// 50Hz
+//     1000000,	// 100Hz
+//     500000,	// 200Hz
+//     200000,	// 500Hz
      100000, 	// 1 KHz
      50000,  	// 2 KHz
      20000,  	// 5 kHz
@@ -30,10 +31,11 @@ uint32_t Tim1_listFreqPWMPSC[]=
      250,	// 400 KHz	: 15
      200,	// 500 KHz
      125,	// 800 KHz
-     100,	// 800 KHz
-     100,	// 800 KHz
-	 80,	//			: 20
-	 50
+     100,	// 1 MHz
+	 80,	//	1,25 MHz		: 20
+	 50,    // 2 MHz
+	 40,	// 2.5 MHz
+	 25	// 4 MHz
      };
 
 //
@@ -54,7 +56,7 @@ void tim1_gpio_init(){
   InitGPio( TIM1_CH2N_Port, TIM1_CH2N_Pin, alternateF, push_pull, veryHigh, noPull,  TIM1_CH2N_AF);
 
   // BKIN on Board WeAct port PA6 used for MISO Flash
-  // InitGPio( TIM1_BKIN_Port, TIM1_BKIN_Pin, alternateF, push_pull, veryHigh, pullDown,  TIM1_BKIN_AF);
+   InitGPio( TIM1_BKIN_Port, TIM1_BKIN_Pin, alternateF, push_pull, veryHigh, pullDown,  TIM1_BKIN_AF);
 }
 
 void change_pwm_mode(ModePWM mode_pwm){
@@ -148,6 +150,15 @@ void tim1_freqDown(void){
   }
 }
 
+void tim1_bkin_enable()
+{
+	CLEAR_BIT(TIM1->BDTR,TIM_BDTR_LOCK); /* Disable the Lock Level*/
+	//	TIM1->BDTR |= TIM_BDTR_OSSI; /* Enable the Output idle mode */
+	//	CLEAR_BIT(TIM1->BDTR, TIM_BDTR_OSSR); /* Disable the Output run mode */
+	TIM1->BDTR |= TIM_BDTR_BKE; /* Enable the Break input */
+	TIM1->BDTR |= TIM_BDTR_BKP; /* Set the polarity to High */
+	TIM1->BDTR |= TIM_BDTR_AOE; /* Enable the automatic output */
+}
 
 void TIM1_IRQHandler()
 {
@@ -174,18 +185,19 @@ void tim1_init(){
   Tim1_posFreqPWM=13;
   currDutyTim1 = 100;
   curr_mode_pwm=freeMode;
-  tim1_freq_tune();
-  // Счетчик регистра захвате/сравнения первого канала
-//  T1_FIRST_COUNTER=(MEANDR_TIMER_TICKS/INIT_PART)-(T1_DEAD_Time/2)-PWM_VALUE;
-//  // Счетчик регистра захвате/сравнения второго канала
-//  T1_SECOND_COUNTER=(MEANDR_TIMER_TICKS*(INIT_PART-1)/INIT_PART)+(T1_DEAD_Time/2)+PWM_VALUE;
-
-//  TIM1->CCR1 = (TIM1->ARR/4)-1;
 
   TIM1->CR1 = 0;
   TIM1->CR2 = 0;
   TIM1->CCER = 0;
   TIM1->CCMR1 = 0;
+  TIM1->BDTR = 0; /* Clear the BDTR BREAK and DEAD TIME REGISTER */
+
+  tim1_freq_tune();
+  tim1_bkin_enable();
+  // Счетчик регистра захвате/сравнения первого канала
+//  T1_FIRST_COUNTER=(MEANDR_TIMER_TICKS/INIT_PART)-(T1_DEAD_Time/2)-PWM_VALUE;
+//  // Счетчик регистра захвате/сравнения второго канала
+//  T1_SECOND_COUNTER=(MEANDR_TIMER_TICKS*(INIT_PART-1)/INIT_PART)+(T1_DEAD_Time/2)+PWM_VALUE;
 
   // Установим делитель частоты для DEAD TIME на 25МГц
   TIM1->CR1 |= TIM_CR1_CKD_1;
@@ -209,7 +221,7 @@ void tim1_init(){
   TIM1->CCER |= TIM_CCER_CC2E | TIM_CCER_CC2NE;
 
   // Main output enable - почему MOE в этом регистре?
-  TIM1->BDTR=TIM_BDTR_MOE | T1_DEAD_Time;
+  TIM1->BDTR |=TIM_BDTR_MOE | T1_DEAD_Time;
   // Буферизуем загрузку регистров
   TIM1->CR1 |= TIM_CR1_ARPE;
   // выравнивание сигналов центру,

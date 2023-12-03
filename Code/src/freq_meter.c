@@ -1,48 +1,33 @@
 #include "main.h"
-
-//#define freqTick CPU_CLOCK/100
-
-#define IDLE 0
-#define DONE 1
+#include "led.h"
+#include "freq_meter.h"
 
 // from pwm_single.c
-extern uint16_t  currDutyTim;
-
-struct  freqMeter structFreqMeter;
-
-extern uint8_t  Tim1_posFreqPWM;
-extern uint32_t Tim1_listFreqPWMPSC[];
-volatile uint32_t freqState = IDLE;
-volatile uint32_t overCalc=0;
-volatile uint32_t T1=0, T2=0, Ticks=0;
+extern uint16_t currDutyTim;
 
 // Прерывание по фронтам входного сигнала
 // Идет через GPIO - те есть через EXTI класс прерываний
 void EXTI1_IRQHandler() {
   // Очистка прерывания
 	EXTI->PR |= EXTI_PR_PR1;
-
-	if(freqState == IDLE)
-	{
-		structFreqMeter.prevTicks = TimerFreqMeter->CCR2;
-		freqState = DONE;
-	}
-	else if(freqState == DONE)
-	{
-		structFreqMeter.curTicks = TimerFreqMeter->CCR2;
-		freqState = IDLE;
-	}
+	freq_meter_ticks++;
 }
 
 // Прерывание по переполнению счетчика
 // Т.е. идет от Таймера через класс прерываний IRQHandler
 void TIM5_IRQHandler(void){
-    if(TimerFreqMeter->SR & TIM_SR_TIF){
-	    TimerFreqMeter->SR &= ~TIM_SR_TIF;
-    }
-    if(TimerFreqMeter->SR & TIM_SR_UIF){
-	    TimerFreqMeter->SR &= ~TIM_SR_UIF;
-    }
+//    if(TimerFreqMeter->SR & TIM_SR_TIF){
+//	    TimerFreqMeter->SR &= ~TIM_SR_TIF;
+//    }
+//    if(TimerFreqMeter->SR & TIM_SR_UIF){
+//	    TimerFreqMeter->SR &= ~TIM_SR_UIF;
+//    }
+	TIM5->SR &= ~TIM_SR_UIF;
+
+	freqMeter=freq_meter_ticks;
+    freq_meter_ticks=0;
+
+    LED1_TOGGLE
 }
 
 
@@ -65,21 +50,15 @@ float getFreqDuty(void){
 }
 
 inline uint32_t getFreqMeter(void){
-  if(structFreqMeter.curTicks > structFreqMeter.prevTicks){
-      Ticks = structFreqMeter.curTicks - structFreqMeter.prevTicks;
-//      structFreqMeter.freq = (uint32_t)(CPU_CLOCK*Ticks/100)/structFreqMeter.psc;
-      structFreqMeter.freq = (uint32_t)(SystemCoreClock/Ticks)/structFreqMeter.psc;
-  }
-  return structFreqMeter.freq;
+  return freqMeter;
 //			(CPU_CLOCK/listFreqPWMPSC[posFreqPWM]);
 }
 
-inline void setFreqMeterPSK(uint16_t psk){
-	structFreqMeter.psc=psk>0?psk:1;
-	TimerFreqMeter->PSC = structFreqMeter.psc-1;
-}
+// Для измерения частоты будем использовать PA1, который будет входом для TIM5
+// TIM5 по восходящему фронту импульса на PA1 будет вызыать прерывание EXTI1_IRQHandler, в котором будем считать импульсы
+// Кроме того сам таймер настроим на прерывание на 1 сек, чтобы подсчитанное кол-во импульсов сохранить как частоту
+// Это дает безошибочное определение частоты до 500KHz, на 1MHz ошибка составляет около 12%
 void FreqMeterOn(void){
-	  structFreqMeter.psc=1;
 	  InitGPio( FreqMeterGPIO,
 			  	FreqMeterPin,
 				alternateF,   	//MODER:10
@@ -91,20 +70,20 @@ void FreqMeterOn(void){
 				FreqMeterAF); //AF2 for TIM5_CH2 on PA1
 
 	// !!! Включаем тактирование таймера
-	TimerFreqMeterEnable;
+	RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;
 
 	// From HAL
 	/* Disable the Channel 2: Reset the CC2E Bit */
-	TimerFreqMeter->CCER &= ~TIM_CCER_CC2E;
+	TIM5->CCER &= ~TIM_CCER_CC2E;
 
-	//Reset Value for ARR
-	TimerFreqMeter->ARR=SystemCoreClock-1;
-	// Обнуляем счетчик
-	TimerFreqMeter->CNT=0;
 	// Считать будем столько раз, сколько сконфигурим
-	TimerFreqMeter->PSC = structFreqMeter.psc-1;
+	TIM5->PSC = 1-1;
+	//Reset Value for ARR
+	TIM5->ARR=SystemCoreClock-1;
+	// Обнуляем счетчик
+	TIM5->CNT=0;
 
-	TimerFreqMeter->CR1 = 0;
+	TIM5->CR1 = 0;
 	// OnePulse Mode must be 0 for continue counter
 	//TimerFreqMeter->CR1 &= ~TIM_CR1_OPM;
 	// CMS: Center-aligned mode selection - Counting Down
@@ -114,21 +93,21 @@ void FreqMeterOn(void){
 
 
 	/* Clear Capture/compare 1 interrupt flag 2 */
-	TimerFreqMeter->SR = 0;
+	TIM5->SR = 0;
 
 	// Не будем сравнивать CCR2 с ARR и вызывать переполнение
-	TimerFreqMeter->SR |= TIM_SR_CC2IF;
+	TIM5->SR |= TIM_SR_CC2IF;
 	// Заодно очистим флаг прерываний
-	TimerFreqMeter->SR &= ~TIM_SR_UIF;
+	TIM5->SR &= ~TIM_SR_UIF;
 
 	/*----------------------- End Section ---------------------------*/
 
 	/*----------- TIMx capture/compare mode register 1 (TIMx_CCMR1) -----*/
 
-	TimerFreqMeter->CCMR1 = 0;
+	TIM5->CCMR1 = 0;
 	// Select Input
 	// CC2 01: CC2 channel is configured as input
-	TimerFreqMeter->CCMR1 |= TIM_CCMR1_CC2S_0;
+	TIM5->CCMR1 |= TIM_CCMR1_CC2S_0;
 
 	/*----------------------- End Section ---------------------------*/
 
@@ -136,9 +115,9 @@ void FreqMeterOn(void){
 
 	// Выбираем триггер TS - trigger selection
 	// Обнуляем
-	TimerFreqMeter->SMCR = 0;
+	TIM5->SMCR = 0;
 	// 110: Filtered Timer Input 2 (TI2FP2)
-	TimerFreqMeter->SMCR |= TIM_SMCR_TS_2 | TIM_SMCR_TS_1;
+	TIM5->SMCR |= TIM_SMCR_TS_2 | TIM_SMCR_TS_1;
 	// Считать вверх/вниз по краю TI2FP1 в зависимости от TI2FP2
 	//	CLEAR_BIT(TimerFreqMeter->SMCR, TIM_SMCR_SMS_Msk);
 
@@ -148,28 +127,25 @@ void FreqMeterOn(void){
 
 	// Учитывать по передним фронтам: TI1FP1 noninverted, TI2FP2 noninverted
 	// Ненвертирующий вход - это когда 1 считается как 1
-	TimerFreqMeter->CCER |= TIM_CCER_CC2P;
+	TIM5->CCER |= TIM_CCER_CC2P;
 //	TimerFreqMeter->CCER &= ~TIM_CCER_CC2P;
 	// CC1E: Capture/Compare 1 output enable
-	TimerFreqMeter->CCER |= TIM_CCER_CC2E;
+	TIM5->CCER |= TIM_CCER_CC2E;
 
 	/*----------------------- End Section ---------------------------*/
 
 	//	TimerFreqMeter->SMCR |= TIM_SMCR_SMS_2 | TIM_SMCR_SMS_1;
 	// Включаем таймер
-	TimerFreqMeter->CR1 |= TIM_CR1_CEN;
+	TIM5->CR1 |= TIM_CR1_CEN;
 
-	NVIC_EnableIRQ(TimerFreqMeterIRQ);
+	NVIC_EnableIRQ(TIM5_IRQn);
 	/* ------------- TIMx DMA/Interrupt enable register (TIMx_DIER) ----------*/
 	// Разрешаем прерывания
 	//	TimerFreqMeter->DIER |= TIM_DIER_TIE;
 	// UIE: Update interrupt enable
-	TimerFreqMeter->DIER |= TIM_DIER_UIE;
+	TIM5->DIER |= TIM_DIER_UIE;
 
-	/*-------------------------- End Section ----------------------------------*/
-
-	/*--------------------- Настройка EXTI прерывания -------------------------*/
-
+	/*--------------------- Настройка EXTI прерывания для PA1--------------------*/
 	// Так как считаем входные сигналы приходящие от GPIO, то и прерывание
 	// должно быть класса EXTI
 	// В первом регистре SYSCFG из 4, находится группа 1 портов для прерывания
@@ -182,6 +158,7 @@ void FreqMeterOn(void){
 	// Ловить сигнал будем нисходящему фронту не будем!
 	// Falling trigger selection register
 	EXTI->FTSR &= ~EXTI_FTSR_TR1;
+	/*--------------------------------------------------------------------------*/
 
 	// Очистка прерывания
 	EXTI->PR |= EXTI_PR_PR1;

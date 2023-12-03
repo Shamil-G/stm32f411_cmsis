@@ -27,11 +27,11 @@ uint32_t listFreqPWMPSC[]=
      250,	// 400 KHz
      200	// 500 KHz
      ,125	// 800 KHz
-//     ,100,	// 1 MHz
-//     80,	// 1,25 MHz
-//     50,	// 2 MHz
-//     25,	// 4 MHz
-//     20	 	// 5 MHz
+     ,100	// 1 MHz
+     ,80	// 1,25 MHz
+//     ,50	// 2 MHz
+//     ,25	// 4 MHz
+//     ,20	 	// 5 MHz
     };
 
 void pwm_tune(){
@@ -153,7 +153,7 @@ void init_pwm(void)
 	    TIM2->CR1 |= TIM_CR1_CEN;
 
 	// Для тестирования выставляем возможность прерывания
-	NVIC_EnableIRQ(TIM2_IRQn);
+//	NVIC_EnableIRQ(TIM2_IRQn);
 }
 
 
