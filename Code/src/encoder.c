@@ -8,7 +8,7 @@ uint32_t bounce_encoder;
 extern void pwm_tune();
 
 #define bounceButton 1000
-#define bounceTurn 65
+#define bounceTurn 90
 
 
 struct encValue EncValue;

@@ -21,7 +21,7 @@ extern uint16_t ili9341_HEIGHT;
 #define SPI_RESET_Pin 	11
 #define SPI_DC_Port	GPIOB
 #define SPI_DC_Pin	12
-#define SPI_CS_Port 	GPIOB
+#define SPI_CS_Port GPIOB
 #define SPI_CS_Pin	9
 // Command for manage LCD
 #define RST_RESET()	PortReset(SPI_RESET_Port, SPI_RESET_Pin)

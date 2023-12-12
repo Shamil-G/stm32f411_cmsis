@@ -154,6 +154,13 @@ void tim1_bkin_enable()
 {
 	CLEAR_BIT(TIM1->BDTR,TIM_BDTR_LOCK); /* Disable the Lock Level*/
 	//	TIM1->BDTR |= TIM_BDTR_OSSI; /* Enable the Output idle mode */
+
+	//	Включает состояние выключения в режиме работы для BREAK функции расширенного таймера,
+	//	в котором сконфигурированы дополнительные выходы.
+	//	Это не имеет никакого эффекта, если нет дополнительных выходных данных.
+	//	Когда выход захвата-сравнения отключен, а дополнительный выход включен,
+	//	выход устанавливается на неактивный уровень,
+	//	определенный полярностью выхода в CCER_CCyE & CCER_CCyNE.
 	//	CLEAR_BIT(TIM1->BDTR, TIM_BDTR_OSSR); /* Disable the Output run mode */
 	TIM1->BDTR |= TIM_BDTR_BKE; /* Enable the Break input */
 	TIM1->BDTR |= TIM_BDTR_BKP; /* Set the polarity to High */
@@ -212,13 +219,13 @@ void tim1_init(){
   TIM1->CCMR1 |= TIM_CCMR1_OC1PE;
   //  Включим CCR1
   TIM1->CCER |= TIM_CCER_CC1E | TIM_CCER_CC1NE;
+  //  Включим CCR1
+  TIM1->CCER |= TIM_CCER_CC2E | TIM_CCER_CC2NE;
 
   // Включаем PWM_mode=2 для 2 канала
   TIM1->CCMR1 |= TIM_CCMR1_OC2M_0 | TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2FE;
   //Output Compare 1 preload enable
   TIM1->CCMR1 |= TIM_CCMR1_OC2PE;
-  //  Включим CCR1
-  TIM1->CCER |= TIM_CCER_CC2E | TIM_CCER_CC2NE;
 
   // Main output enable - почему MOE в этом регистре?
   TIM1->BDTR |=TIM_BDTR_MOE | T1_DEAD_Time;

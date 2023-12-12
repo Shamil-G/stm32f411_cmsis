@@ -17,13 +17,10 @@ int main(void){
       init_pwm();
       EncoderOn();
 
-//      tim11_50Hz_init();
-      tim1_gpio_init();
-      tim1_init();
 //      change_pwm_mode(sinusFifty);
 
       spi_gpio_init();
-      ili9341_gpio_init();
+//      ili9341_gpio_init();
       spi_master_init();
 
       dma_init(MasterSPI);
