@@ -23,7 +23,7 @@ int main(void){
 //      ili9341_gpio_init();
       spi_master_init();
 
-      dma_init(MasterSPI);
+      dma_spi_init(MasterSPI);
       spi2_dma_enable();
 #ifndef USE_FREERTOS
       ili9341_init(240,320);

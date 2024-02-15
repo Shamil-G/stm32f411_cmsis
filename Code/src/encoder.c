@@ -99,7 +99,7 @@ void EXTI3_IRQHandler() {
 }
 // Button IRQ
 void EXTI15_10_IRQHandler() {
-  EXTI->PR |= EXTI_PR_PR6;
+  EXTI->PR |= EXTI_PR_PR15;
   if(lockEncoder==0){
 	  lockEncoder=1;
 //	  if( active_menu_item!=Common && !is_bounce() )
@@ -136,8 +136,11 @@ void ButtonIRQOn(void){
 				noPull, // Подтяжка pull-up внешняя, изначально порт на земле
 				0); //AF:2
 
-//	SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI3_PA | SYSCFG_EXTICR1_EXTI3_PB;
-	SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI3_PB;
+	// Обяззательно тактирование!
+	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+
+	// Если PA15, то
+	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI15_PA;;
 
 	// Надо выбрать что то одно, либо РВ3 либо РА15
 	EXTI->RTSR |= EXTI_RTSR_TR15;
@@ -151,6 +154,8 @@ void ButtonIRQOn(void){
 	//Мы будем реагировать на передний, поэтому следует настроить RTSR
 	//Rising trigger selection register
 
+	//	SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI3_PA | SYSCFG_EXTICR1_EXTI3_PB;
+	SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI3_PB;
 	EXTI->RTSR |= EXTI_RTSR_TR3;
 	//Falling trigger selection register
 	EXTI->FTSR &= ~EXTI_FTSR_TR3;

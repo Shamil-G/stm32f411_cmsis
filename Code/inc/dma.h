@@ -3,7 +3,9 @@
 #ifndef DMA_H_
 #define DMA_H_
 
-void dma_init(SPI_TypeDef *spi);
+void dma_spi_init(SPI_TypeDef *spi);
+
+void dma_init(DMA_TypeDef* dma, DMA_Stream_TypeDef* dma_channel);
 
 #define dma1_enable()   RCC->AHB1ENR|=RCC_AHB1ENR_DMA1EN
 
