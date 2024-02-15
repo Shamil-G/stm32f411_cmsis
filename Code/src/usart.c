@@ -53,74 +53,12 @@ void init_usart1(){
 	  USART1->CR3=0L;
 	  // 0: 1 Start bit, 8 Data bits, n Stop bit
 	  // CLEAR_BIT(USART1->CR1, USART1_CR1_M);
-	  // Enable DMA transmitter, receiver
-	  USART1->CR3 |= USART_CR3_DMAT | USART_CR3_DMAR;
 	  // ENABLED USART1
 	  USART1->CR1 |= USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
 
 	  // Прерывание по приему данных
 	  // USART1->CR1 = USART_CR1_RXNEIE | USART_CR1_IDLEIE;
 	  // NVIC_EnableIRQ(USART1_IRQn);
-}
-
-void USART1_IRQHandler(void){
-	if(READ_BIT(USART1->SR, USART_SR_RXNE)){
-		usart_buffer[usart_counter] = USART1->DR;
-		usart_counter++;
-	}
-	if(READ_BIT(USART1->SR, USART_SR_IDLE)){
-		USART1->DR;
-		usart_counter=0;
-	}
-
-}
-
-//----------------------------------------------------------
-// For Rx
-void DMA2_Stream2_IRQHandler(void)
-{
-  // Stream x transfer complete interrupt flag - TCIF
-  if(READ_BIT(DMA2->LISR, DMA_LISR_TCIF2) == (DMA_LISR_TCIF2))
-  {
-	// Stream x clear transfer complete interrupt flag
-	// Writing 1 to this bit clears the corresponding
-	// TCIFx flag in the DMA_LISR register
-    WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTCIF2);
-    fl_tx = 1;
-  }
-  else
-	  // Stream x transfer error interrupt flag - TEIF
-	  if(READ_BIT(DMA2->LISR, DMA_LISR_TEIF2) == (DMA_LISR_TEIF2))
-	  {
-		//Disable DMA channels
-		CLEAR_BIT(DMA2_Stream2->CR, DMA_SxCR_EN);
-		DMA2->LIFCR |=
-						DMA_LIFCR_CHTIF2 | // Stream x clear half transfer interrupt flag
-						DMA_LIFCR_CTEIF2 | // Stream x clear transfer error interrupt flag
-						DMA_LIFCR_CDMEIF2| // Stream x clear direct mode error interrupt flag
-						DMA_LIFCR_CFEIF2;  // Stream x clear FIFO error interrupt flag
-	  }
-}
-//----------------------------------------------------------
-// For Tx
-void DMA2_Stream7_IRQHandler(void)
-{
-  if(READ_BIT(DMA2->HISR, DMA_HISR_TCIF7) == (DMA_HISR_TCIF7))
-  {
-    WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CTCIF7);
-    fl_rx = 1;
-  }
-  else
-	  if(READ_BIT(DMA2->HISR, DMA_HISR_TEIF7) == (DMA_HISR_TEIF7))
-	  {
-		// Disable DMA channels
-		CLEAR_BIT(DMA2_Stream7->CR, DMA_SxCR_EN);
-		// Очищаем потенциальные прерывания
-		DMA2->HIFCR |= 	DMA_HIFCR_CHTIF7 | // Stream x clear half transfer interrupt flag
-						DMA_HIFCR_CTEIF7 | // Stream x clear transfer error interrupt flag
-						DMA_HIFCR_CDMEIF7| // Stream x clear direct mode error interrupt flag
-						DMA_HIFCR_CFEIF7;  // Stream x clear FIFO error interrupt flag
-	  }
 }
 
 void dma_usart1_init_(){
@@ -175,23 +113,85 @@ void dma_usart1_init_(){
 
 void usart1_dma_tx(uint8_t * txData, uint16_t buff_size){
     DMA2_Stream2->CR |= DMA_SxCR_DIR_0 |   // Направление данных из памяти в периферию
-						DMA_SxCR_MINC;     // Инкремент памяти включен
+			DMA_SxCR_MINC;     // Инкремент памяти включен
 
     DMA2_Stream2->PAR  = (uint32_t)&(USART1->DR);                                 // Set address periphery
-	DMA2_Stream2->M0AR = (uint32_t)txData;                                        // Set address buf
-	DMA2_Stream2->NDTR = buff_size;                                                // Set len
+    DMA2_Stream2->M0AR = (uint32_t)txData;                                        // Set address buf
+    DMA2_Stream2->NDTR = buff_size;                                                // Set len
+    // Enable DMA transmitter for USART
+    USART1->CR3 |= USART_CR3_DMAT;
 
-	DMA2_Stream2->CR  |= DMA_SxCR_EN;                                             // Enable DMA
+    DMA2_Stream2->CR  |= DMA_SxCR_EN;                                             // Enable DMA
 }
 
 void usart1_dma_rx(uint8_t * rxData, uint16_t buff_size){
-	CLEAR_BIT(DMA2_Stream2->CR, DMA_SxCR_DIR_0);
-
+    DMA2_Stream2->CR &= ~DMA_SxCR_DIR_0;
     DMA2_Stream2->CR  |= DMA_SxCR_MINC;    // Инкремент памяти включен
 
     DMA2_Stream2->PAR  = (uint32_t)&(USART1->DR);                                 // Set address periphery
-	DMA2_Stream2->M0AR = (uint32_t)rxData;                                        // Set address buf
-	DMA2_Stream2->NDTR = buff_size;                                                // Set len
+    DMA2_Stream2->M0AR = (uint32_t)rxData;                                        // Set address buf
+    DMA2_Stream2->NDTR = buff_size;                                                // Set len
+    // Enable DMA receiver for USART
+    USART1->CR3 |= USART_CR3_DMAR;
 
-	DMA2_Stream2->CR  |= DMA_SxCR_EN;                                             // Enable DMA
+    DMA2_Stream2->CR  |= DMA_SxCR_EN;                                             // Enable DMA
+}
+
+void USART1_IRQHandler(void){
+	if(READ_BIT(USART1->SR, USART_SR_RXNE)){
+		usart_buffer[usart_counter] = USART1->DR;
+		usart_counter++;
+	}
+	if(READ_BIT(USART1->SR, USART_SR_IDLE)){
+		USART1->DR;
+		usart_counter=0;
+	}
+}
+
+//----------------------------------------------------------
+// For Rx
+void DMA2_Stream2_IRQHandler(void)
+{
+  // Stream x transfer complete interrupt flag - TCIF
+  if(READ_BIT(DMA2->LISR, DMA_LISR_TCIF2) == (DMA_LISR_TCIF2))
+  {
+    // Stream x clear transfer complete interrupt flag
+    // Writing 1 to this bit clears the corresponding
+    // TCIFx flag in the DMA_LISR register
+    WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTCIF2);
+    fl_tx = 1;
+  }
+  else
+	  // Stream x transfer error interrupt flag - TEIF
+	  if(READ_BIT(DMA2->LISR, DMA_LISR_TEIF2) == (DMA_LISR_TEIF2))
+	  {
+		//Disable DMA channels
+		CLEAR_BIT(DMA2_Stream2->CR, DMA_SxCR_EN);
+		DMA2->LIFCR |=
+						DMA_LIFCR_CHTIF2 | // Stream x clear half transfer interrupt flag
+						DMA_LIFCR_CTEIF2 | // Stream x clear transfer error interrupt flag
+						DMA_LIFCR_CDMEIF2| // Stream x clear direct mode error interrupt flag
+						DMA_LIFCR_CFEIF2;  // Stream x clear FIFO error interrupt flag
+	  }
+}
+//----------------------------------------------------------
+// For Tx
+void DMA2_Stream7_IRQHandler(void)
+{
+  if(READ_BIT(DMA2->HISR, DMA_HISR_TCIF7) == (DMA_HISR_TCIF7))
+  {
+    WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CTCIF7);
+    fl_rx = 1;
+  }
+  else
+	  if(READ_BIT(DMA2->HISR, DMA_HISR_TEIF7) == (DMA_HISR_TEIF7))
+	  {
+		// Disable DMA channels
+		CLEAR_BIT(DMA2_Stream7->CR, DMA_SxCR_EN);
+		// Очищаем потенциальные прерывания
+		DMA2->HIFCR |= 	DMA_HIFCR_CHTIF7 | // Stream x clear half transfer interrupt flag
+						DMA_HIFCR_CTEIF7 | // Stream x clear transfer error interrupt flag
+						DMA_HIFCR_CDMEIF7| // Stream x clear direct mode error interrupt flag
+						DMA_HIFCR_CFEIF7;  // Stream x clear FIFO error interrupt flag
+	  }
 }
