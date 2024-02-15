@@ -19,12 +19,11 @@ int main(void){
 
 //      change_pwm_mode(sinusFifty);
 
-      spi_gpio_init();
+      spi2_gpio_init();
 //      ili9341_gpio_init();
-      spi_master_init();
+      spi_init(SPI2);
+      dma_spi2_init();
 
-      dma_spi_init(MasterSPI);
-      spi2_dma_enable();
 #ifndef USE_FREERTOS
       ili9341_init(240,320);
       ili9341_primary_tune();

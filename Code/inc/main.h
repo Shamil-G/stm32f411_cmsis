@@ -46,11 +46,6 @@ void Delay(uint32_t ms);
 //#define USE_SYSTICK
 
 // SPI Section
-#define MasterSPI SPI2
-#define MasterDMA DMA1
-#define MstSpiDmaStreamTX DMA1_Stream4
-#define MasterDMAChannel 0
-
 #define USE_SPI_ILI9341
 
 #define SPI_MOSI_Port	GPIOB
@@ -140,7 +135,7 @@ void change_pwm_mode(ModePWM mode);
 
 
 void spi_init(SPI_TypeDef *spi);
-void spi_gpio_init(void);
+void spi2_gpio_init(void);
 void ili9341_gpio_init(void);
 void spi_ili9341_init(void);
 int  spi2_dma_ready();

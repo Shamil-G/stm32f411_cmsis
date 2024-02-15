@@ -1,3 +1,5 @@
+#include "main.h"
+
 void flash_init(){
   // allow access to the Flash control register and so, to allow program and erase operations
   FLASH->KEYR = 0x45670123;
@@ -54,4 +56,5 @@ void flash_write(unsigned char* data, unsigned int address, unsigned int count) 
 	}
 
 	FLASH->CR &= ~(FLASH_CR_PG);
+	FLASH->CR |= FLASH_CR_LOCK;
 }
