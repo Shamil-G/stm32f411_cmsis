@@ -2,7 +2,6 @@
 
 int monitorStarted=0;
 SELECT_TIMER selected_timer=TIMER1;
-void vTaskTim1(void *parameter);
 void toggle_led1(void);
 void enable_led1(void);
 //void meterPortOn();
@@ -24,87 +23,15 @@ int main(void){
       spi_init(SPI2);
       dma_spi2_init();
 
-#ifndef USE_FREERTOS
-      ili9341_init(240,320);
-      ili9341_primary_tune();
-#endif
-
 	InitADC();
 //	meterPortOn();
 	FreqMeterOn();
 //	Phase3_InitHrpwm();
 
-#ifdef USE_FREERTOS
-	xTaskCreate(vTaskMonitor, "ShowMonitor", 512, NULL, 2, NULL);
-//	xTaskCreate(vTaskTim1, "SetTim1", 128, NULL, 1, NULL);
-	xTaskCreate( vTaskLed1,
-	"LED1", // Task Name
-	16, 	// Stack Size, при 8 подвисало!
-	NULL, 	// void* parameter
-	1, 	// Priority freeRTOS растет вместе с номером, в NVIC все наоборот
-	NULL	// TaskHandler_t *pxCreateTask
-	);
-	vTaskStartScheduler();
-	while(1){
-	    showSOS();
-	}
-#endif
-
-#ifndef USE_FREERTOS
 	enable_led1();
 	while(1){
 	  show_ili9341_monitor();
 	}
-#endif
-}
-
-void vTaskLed1 (void *parameter){
-  while(1)
-  {
-    showBip();
-  }
-}
-
-void vTaskTim1(void *parameter){
-  while(1){
-//    pwm2_test();
-#ifdef USE_FREERTOS
-    vTaskDelay(10);
-#endif
-#ifndef USE_FREERTOS
-	  Delay(100);
-#endif
-  }
-}
-
-
-void vTaskMonitor(void *parameter){
-  while(1){
-    if(!monitorStarted){
-      monitorStarted=1;
-      ili9341_init(240,320);
-#ifdef  USE_FREERTOS
-      vTaskDelay(100);
-#endif
-#ifndef USE_FREERTOS
-	  Delay(100);
-#endif
-      ili9341_primary_tune();
-#ifdef USE_FREERTOS
-      vTaskDelay(100);
-#endif
-#ifndef USE_FREERTOS
-	  Delay(100);
-#endif
-    }
-    show_ili9341_monitor();
-#ifdef USE_FREERTOS
-    vTaskDelay(150);
-#endif
-#ifndef USE_FREERTOS
-	  Delay(150);
-#endif
-  }
 }
 
 void pwm_up(void){

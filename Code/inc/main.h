@@ -13,22 +13,8 @@
 
 #define USE_SYSTICK
 #define _PLUG_NEWLIB
-//#define USE_FREERTOS
 
-#ifdef	USE_FREERTOS
-
-//#include "FreeRTOS.h"
-//#include "task.h"
-//#include "queue.h"
-
-#define Delay(ms)     vTaskDelay(ms)
-
-#endif
-
-#ifndef USE_FREERTOS
 void Delay(uint32_t ms);
-#endif
-
 
 //This Project for TSM32F411 from WeAct
 //Main feature:
