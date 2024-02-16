@@ -66,28 +66,31 @@ void dma_spi2_init(){
   dma_init(DMA1, DMA1_Stream4);  // SPI DMA Tx
   DMA1_Stream4->CR &= ~DMA_SxCR_CHSEL_Msk; // Выбор 0 канала
 
+  //Port SPI2 have to use DMA
+  SPI2->CR2 |= SPI_CR2_TXDMAEN;
+
   NVIC_EnableIRQ(DMA1_Stream4_IRQn);
 }
 
 void spi2_dma_tx(uint8_t *data, uint32_t len){
   // Очищаем потенциальные прерывания, иначе не запустится
-  // DMA1_Stream4->CR &= ~DMA_SxCR_EN;
-  // while(DMA1_Stream4->CR & DMA_SxCR_EN);
+  DMA1_Stream4->CR &= ~DMA_SxCR_EN;
+  while(DMA1_Stream4->CR & DMA_SxCR_EN);
 
-  DMA1_Stream4->CR |= DMA_SxCR_DIR_0 |   // Направление данных из памяти в периферию
+  DMA1_Stream4->CR |= 	DMA_SxCR_DIR_0 |   // Направление данных из памяти в периферию
 			DMA_SxCR_MINC;     // Инкремент памяти включен
+  // По умолчанию стоит 1 байт, тем не менее поставим 1 байт
+  dmaStreamTx->CR &= 	~DMA_SxCR_PINC |   // Peripheral address pointer is fixed 
+	  		~DMA_SxCR_CIRC |   // Circular mode disabled
+	  		~DMA_SxCR_MSIZE |  // Memory data size = 8bit 
+	  		~DMA_SxCR_PSIZE;   // Peripheral data size
   // Установим адрес порта SPI куда DMA будет перекладывать данные
   DMA1_Stream4->PAR = (uint32_t)&SPI2->DR;
   // Заносим адрес памяти откуда мы будем передавать данные
   DMA1_Stream4->M0AR = (uint32_t)data;
   // Количество передаваемых данных
   DMA1_Stream4->NDTR = len;
-  // По умолчанию стоит 1 байт
-  // dmaStreamTx->CR &= ~DMA_SxCR_MSIZE;
-
-  //Сообщаем SPI что надо использовать DMA при передаче
-  SPI2->CR2 |= SPI_CR2_TXDMAEN;
-
+  // Start Tranceive
   DMA1_Stream4->CR |= DMA_SxCR_EN;
 }
 
@@ -104,20 +107,15 @@ void dma_reinit(SPI_TypeDef *spi){
   MstSpiDmaStreamTX->PAR = (uint32_t)(&spi->DR);
 
   //Настройка канала DMA
-  //приоритет низкий
-  MstSpiDmaStreamTX->CR &= ~DMA_SxCR_PL;
-  //разрядность данных в памяти 8 бит
-  MstSpiDmaStreamTX->CR &= ~DMA_SxCR_MSIZE;
-  //разрядность регистра данных SPI 16 бит
-  MstSpiDmaStreamTX->CR &= ~DMA_SxCR_PSIZE;
-  MstSpiDmaStreamTX->CR |=  DMA_SxCR_PSIZE_0;
-  //Включить инкремент адреса памяти
-  MstSpiDmaStreamTX->CR |= DMA_SxCR_MINC;
-  //Инкремент адреса периферии отключен
-  MstSpiDmaStreamTX->CR &= ~DMA_SxCR_PINC;
-  //кольцевой режим отключен
-  MstSpiDmaStreamTX->CR &= ~DMA_SxCR_CIRC;
+  MstSpiDmaStreamTX->CR &= 	~DMA_SxCR_PL |    // приоритет низкий
+  				~DMA_SxCR_MSIZE | // разрядность данных в памяти 8 бит
+	  			~DMA_SxCR_PSIZE | // Peripheral address pointer is fixed
+      				~DMA_SxCR_PINC  | // Инкремент адреса периферии отключен
+	  			~DMA_SxCR_CIRC    // //кольцевой режим отключен
 
+    MstSpiDmaStreamTX->CR |=  	DMA_SxCR_PSIZE_0 | // разрядность регистра данных SPI 16 бит
+    				DMA_SxCR_MINC;     //Включить инкремент адреса памяти
+  
   //Передача данных из памяти в периферию
   MstSpiDmaStreamTX->CR &=  ~DMA_SxCR_DIR;
   MstSpiDmaStreamTX->CR |=  DMA_SxCR_DIR_0;
@@ -134,11 +132,11 @@ uint8_t SPI2_WriteData(uint8_t* pData, uint32_t Size, uint32_t Timeout)
 //	  }
 //	#endif /* USE_SPI_CRC */
 
-  uint32_t ticks=0;
 #ifdef USE_DMA
   spi2_dma_tx(pData, Size);
 #endif
 #ifndef USE_DMA
+  uint32_t ticks=0;
   while (Size > 0U)
   {
 	if (READY_DATA_REGISTR)  // Ожидаем флага TXE - что регистр DR готов для приема данных
