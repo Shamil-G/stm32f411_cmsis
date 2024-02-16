@@ -68,6 +68,14 @@ void dma_spi2_init(){
 
   //Port SPI2 have to use DMA
   SPI2->CR2 |= SPI_CR2_TXDMAEN;
+  // По умолчанию стоит 1 байт, тем не менее поставим 1 байт
+  dmaStreamTx->CR &= 	~DMA_SxCR_PINC |   // Peripheral address pointer is fixed 
+	  		~DMA_SxCR_CIRC |   // Circular mode disabled
+	  		~DMA_SxCR_MSIZE |  // Memory data size = 8bit 
+	  		~DMA_SxCR_PSIZE;   // Peripheral data size
+
+  // Установим адрес порта SPI2 куда DMA будет перекладывать данные
+  DMA1_Stream4->PAR = (uint32_t)&SPI2->DR;
 
   NVIC_EnableIRQ(DMA1_Stream4_IRQn);
 }
@@ -79,13 +87,6 @@ void spi2_dma_tx(uint8_t *data, uint32_t len){
 
   DMA1_Stream4->CR |= 	DMA_SxCR_DIR_0 |   // Направление данных из памяти в периферию
 			DMA_SxCR_MINC;     // Инкремент памяти включен
-  // По умолчанию стоит 1 байт, тем не менее поставим 1 байт
-  dmaStreamTx->CR &= 	~DMA_SxCR_PINC |   // Peripheral address pointer is fixed 
-	  		~DMA_SxCR_CIRC |   // Circular mode disabled
-	  		~DMA_SxCR_MSIZE |  // Memory data size = 8bit 
-	  		~DMA_SxCR_PSIZE;   // Peripheral data size
-  // Установим адрес порта SPI куда DMA будет перекладывать данные
-  DMA1_Stream4->PAR = (uint32_t)&SPI2->DR;
   // Заносим адрес памяти откуда мы будем передавать данные
   DMA1_Stream4->M0AR = (uint32_t)data;
   // Количество передаваемых данных
@@ -187,9 +188,10 @@ void DMA1_Stream4_IRQHandler(void)
   {
     //Clear Channel 4 interrupt flag
     DMA1->HIFCR |= DMA_HIFCR_CTCIF4;
-//	DMA1_Stream4->CR &= ~DMA_SxCR_EN;
-//  SPI2->CR2 &= ~SPI_CR2_TXDMAEN;
-
+    // While Tx buffer not empty
+    while(!(SPI2->SR & SPI2_TXE));
+    // while SPI not busy
+    while(SPI2->SR & SPI2_BSY);
     __NOP();  
   }
   else{
@@ -198,7 +200,9 @@ void DMA1_Stream4_IRQHandler(void)
 			DMA_HIFCR_CTEIF4 | // Stream x clear transfer error interrupt flag
 			DMA_HIFCR_CDMEIF4| // Stream x clear direct mode error interrupt flag
 			DMA_HIFCR_CFEIF4;  // Stream x clear FIFO error interrupt flag
-	  
+	// Необходимо прочитать флаг SPI2->SR &  SPI2_SR_OVR
+	if(SPI2->SR & SPI2_SR_OVR)
+  		spi2_clear_ovrflag();
       __NOP();
   }
 }
