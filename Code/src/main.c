@@ -1,7 +1,7 @@
 #include "main.h"
 
 int monitorStarted=0;
-SELECT_TIMER selected_timer=TIMER1;
+SELECT_TIMER selected_timer=TIMER2;
 void toggle_led1(void);
 void enable_led1(void);
 //void meterPortOn();
@@ -13,19 +13,22 @@ int main(void){
 //      InitMainTick();
       init_SysTick();
 
-      init_pwm();
+      init_pwm(); 		// 17.02.2024
       EncoderOn();
 
 //      change_pwm_mode(sinusFifty);
 
       spi2_gpio_init();
-//      ili9341_gpio_init();
       spi_init(SPI2);
       dma_spi2_init();
 
-	InitADC();
+      ili9341_gpio_init();
+      ili9341_init(240,320);
+      ili9341_primary_tune();
+
+	InitADC(); 			// 17.02.2024
 //	meterPortOn();
-	FreqMeterOn();
+	FreqMeterOn(); 		// 17.02.2024
 //	Phase3_InitHrpwm();
 
 	enable_led1();

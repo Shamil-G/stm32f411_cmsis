@@ -59,14 +59,13 @@
     UNUSED(tmpreg_ovr);			\
   }while(0U)
 
-uint8_t SPI2_WriteData(uint8_t* pData, uint32_t Size, uint32_t Timeout);
+uint8_t SPI2_WriteData(uint8_t* pData, uint16_t Size, uint32_t Timeout);
 void spi2_gpio_init(void);
 void spi_init(SPI_TypeDef *spi);
 
 #ifdef USE_DMA
 
 void dma_spi2_init();
-void spi2_dma_tx(uint8_t *data, uint32_t len);
 
 #endif
 

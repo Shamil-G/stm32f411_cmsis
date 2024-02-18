@@ -189,7 +189,7 @@ void tim1_init(){
   RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
   TIM1->PSC=PWM_PSC;
   lockTim1 = 0;
-  Tim1_posFreqPWM=13;
+  Tim1_posFreqPWM=14;
   currDutyTim1 = 100;
   curr_mode_pwm=freeMode;
 

@@ -40,18 +40,20 @@ uint16_t ili9341_HEIGHT;
 
 uint8_t type_send=TRANSMIT_NONE;
 LCD_DrawPropTypeDef lcdprop;
+extern uint32_t spi_ticks;
 
 /*-------------------------------------------------------*/
 void ili9341_SendCommand(uint8_t cmd){
   if(type_send!=TRANSMIT_CMD){
-      if (SPI_READY()==0)
-      {
-      /* Enable SPI peripheral */
-	  SPI_ENABLE();
-      }
-      END_OPERATION(); // ожидаем конца последней передачи, флаг SR->BSY
-      type_send=TRANSMIT_CMD;
-      DC_COMMAND();
+		if (SPI_READY()==0)
+		{
+		  SPI_ENABLE();
+		}
+		spi_ticks=0;
+		while(SPI2->SR & SPI_SR_BSY) // WAIT END_OPERATION
+			if(spi_ticks>=5000) return;
+		type_send=TRANSMIT_CMD;
+		SPI_DC_Port->BSRR = 1 << (SPI_DC_Pin+16); // DC_COMMAND(); GO Down
   }
   SPI_WriteData(&cmd, 1, 5000);
   SPI_CLEAR_OVRFLAG();
@@ -59,26 +61,36 @@ void ili9341_SendCommand(uint8_t cmd){
 
 static void ili9341_SendData(uint8_t* buff, uint16_t buff_size){
     if(type_send!=TRANSMIT_DATA){
-	END_OPERATION();
-	type_send=TRANSMIT_DATA;
-	DC_DATA();
+		spi_ticks=0;
+		while(SPI2->SR & SPI_SR_BSY) // WAIT END_OPERATION
+			if(spi_ticks>=5000) return;
+
+		type_send=TRANSMIT_DATA;
+		//#define SPI_DC_Port	GPIOB
+		//#define SPI_DC_Pin	12
+		SPI_DC_Port->BSRR = 1 << SPI_DC_Pin; // DC_DATA(); GO Up
     }
-    SPI_WriteData(buff, buff_size, 1000000);
+    SPI_WriteData(buff, buff_size, 10000);
 }
 //-------------------------------------------------------------------
 static void ili9341_SendDataByte(uint8_t buff){
     if(type_send!=TRANSMIT_DATA){
-	END_OPERATION();
-	type_send=TRANSMIT_DATA;
-	DC_DATA();
+		spi_ticks=0;
+		while(SPI2->SR & SPI_SR_BSY) // WAIT END_OPERATION
+			if(spi_ticks>=5000) return;
+
+		type_send=TRANSMIT_DATA;
+		SPI_DC_Port->BSRR = 1 << SPI_DC_Pin; // DC_DATA(); GO Up
     }
-    SPI_WriteData(&buff, 1, 1000000);
+    SPI_WriteData(&buff, 1, 10000);
 }
 //--------------------------------------------------------------------
 void ili9341_reset(void){
-	RESET_ACTIVE();
+	//#define SPI_RESET_Port 	GPIOA
+	//#define SPI_RESET_Pin 	11
+	SPI_RESET_Port->BSRR = 1 << (SPI_RESET_Pin+16); // Go Down
 	Delay(5);
-	RESET_IDLE();
+	SPI_RESET_Port->BSRR = 1 << SPI_RESET_Pin; 		// Go Up
 }
 //-------------------------------------------------------------------
 static void ili9341_SetAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
@@ -344,16 +356,18 @@ void ili9341_FontsIni(void)
 }
 //https://narodstream.ru/stm-urok-179-displej-tft-240x320-spi-chast-1/
 void ili9341_init(uint16_t w_size, uint16_t h_size){
-    uint8_t data[15];
-    SPI_ENABLE(); 	// SET_BIT((__HANDLE__)->Instance->CR1, SPI_CR1_SPE)
-    CS_ACTIVE(); 		// SPI_CS_Port->BSRR = 1 << (SPI_CS_Pin+16)
+    uint8_t data[16];
+    SPI2->CR1 |= SPI_CR1_SPE; 					// SPI2 Enable
+    SPI_CS_Port->BSRR = 1 << (SPI_CS_Pin+16); 	// CS_ACTIVE()
 
     // HardReset	// SPI_RESET_Port->BSRR = 1 << (SPI_RESET_Pin+16)
     ili9341_reset();	// HAL_Delay(5);
 			// RESET_IDLE();
     // SoftReset
     ili9341_SendCommand(0x01);
-    //
+//    data[0] = 0x00;
+//    ili9341_SendData(data, 1);
+    // -----------------------
     Delay(1000);
     //Power Control A
     data[0] = 0x39;
@@ -363,23 +377,27 @@ void ili9341_init(uint16_t w_size, uint16_t h_size){
     data[4] = 0x02;
     ili9341_SendCommand(0xCB);
     ili9341_SendData(data, 5);
+    //------------------------
     //Power Control B
     data[0] = 0x00;
     data[1] = 0xC1;
     data[2] = 0x30;
     ili9341_SendCommand(0xCF);
     ili9341_SendData(data, 3);
+    //------------------------
     //Driver timing control A
     data[0] = 0x85;
     data[1] = 0x00;
     data[2] = 0x78;
     ili9341_SendCommand(0xE8);
     ili9341_SendData(data, 3);
+    //------------------------
     //Driver timing control B
     data[0] = 0x00;
     data[1] = 0x00;
     ili9341_SendCommand(0xEA);
     ili9341_SendData(data, 2);
+    //------------------------
     //Power on Sequence control
     data[0] = 0x64;
     data[1] = 0x03;
@@ -387,52 +405,64 @@ void ili9341_init(uint16_t w_size, uint16_t h_size){
     data[3] = 0x81;
     ili9341_SendCommand(0xED);
     ili9341_SendData(data, 4);
+    //------------------------
     //Pump ratio control
     data[0] = 0x20;
     ili9341_SendCommand(0xF7);
     ili9341_SendData(data, 1);
+    //------------------------
     //Power Control,VRH[5:0]
-    data[0] = 0x10;
+    // data[0] = 0x10;			!!!!!!!!   17.02.2024
+    data[0] = 0x23;
     ili9341_SendCommand(0xC0);
     ili9341_SendData(data, 1);
+    //------------------------
     //Power Control,SAP[2:0];BT[3:0]
     data[0] = 0x10;
     ili9341_SendCommand(0xC1);
     ili9341_SendData(data, 1);
-    //VCOM Control 1
+    //------------------------
+    //VCM Control 1
     data[0] = 0x3E;
     data[1] = 0x28;
     ili9341_SendCommand(0xC5);
     ili9341_SendData(data, 2);
-    //VCOM Control 2
+    //------------------------
+    //VCM Control 2
     data[0] = 0x86;
     ili9341_SendCommand(0xC7);
     ili9341_SendData(data, 1);
+    //------------------------
     //Memory Acsess Control
-    data[0] = 0x48;
+    data[0] = 0x48;				// Ориентация дисплея - вертикальная
     ili9341_SendCommand(0x36);
     ili9341_SendData(data, 1);
+    //------------------------
     //Pixel Format Set
-    data[0] = 0x55;//16bit
+    data[0] = 0x55;				// 16 бит входной, 16 бит выходной
     ili9341_SendCommand(0x3A);
     ili9341_SendData(data, 1);
+    //------------------------
     //Frame Rratio Control, Standard RGB Color
     data[0] = 0x00;
     data[1] = 0x18;
     ili9341_SendCommand(0xB1);
     ili9341_SendData(data, 2);
+    //------------------------
     //Display Function Control
     data[0] = 0x08;
     data[1] = 0x82;
     data[2] = 0x27;//320 строк
     ili9341_SendCommand(0xB6);
     ili9341_SendData(data, 3);
-    //Enable 3G (пока не знаю что это за режим)
-    data[0] = 0x00;//не включаем
+    //------------------------
+    // Отключаем гамма-коррекцию
+    data[0] = 0x00;				//не включаем
     ili9341_SendCommand(0xF2);
     ili9341_SendData(data, 1);
-    //Gamma set
-    data[0] = 0x01;//Gamma Curve (G2.2) (Кривая цветовой гаммы)
+    //--------------------------
+    // Выбор кривой гамма-коррекции
+    data[0] = 0x01;			//Gamma Curve (G2.2) (Кривая цветовой гаммы)
     ili9341_SendCommand(0x26);
     ili9341_SendData(data, 1);
     // Positive Gamma  Correction
@@ -454,6 +484,7 @@ void ili9341_init(uint16_t w_size, uint16_t h_size){
     data[14] = 0x00;
     ili9341_SendCommand(0xE0);
     ili9341_SendData(data, 15);
+    //-------------------------
     //Negative Gamma  Correction
     data[0] = 0x00;
     data[1] = 0x0E;
@@ -472,8 +503,9 @@ void ili9341_init(uint16_t w_size, uint16_t h_size){
     data[14] = 0x0F;
     ili9341_SendCommand(0xE1);
     ili9341_SendData(data, 15);
-    ili9341_SendCommand(0x11);//Выйдем из спящего режима
-
+    //-------------------------
+    ili9341_SendCommand(0x11); //Выйдем из спящего режима
+    //-------------------------
     Delay(120);
     // включим дисплей, настроив нужную ориентацию экрана
     data[0] = TFT9341_ROTATION;

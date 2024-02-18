@@ -109,7 +109,7 @@ void init_pwm(void)
 	WRITE_REG(PWMSingleTimer->PSC, 1 - 1);
 
 	lockTim = 0;
-	posFreqPWM=13;
+	posFreqPWM=18;
 	currDutyTim = 200; // 20%
 	freq_tune();
 //	PWMSingleTimerCCR = PWMSingleTimer->ARR/currDuty;		// 10% - Коэффициент заполнения
