@@ -1,6 +1,8 @@
 
 #ifdef STM32F411
 
+#define USE_USART_DMA
+
 #define Fpclk2 SystemCoreClock
 #define Fpclk1 SystemCoreClock/2
 
