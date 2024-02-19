@@ -27,8 +27,7 @@
 uint16_t ili9341_WIDTH;
 uint16_t ili9341_HEIGHT;
 
-#define SPI_CLEAR_OVRFLAG() 	spi2_clear_ovrflag()
-#define SPI_ENABLE()	    	spi2_enable()
+#define SPI_ENABLE()	    spi2_enable()
 #define SPI_READY()	    	spi2_ready()
 #define END_OPERATION()		spi2_end_operation()
 #define SPI_WriteData		SPI2_WriteData
@@ -41,6 +40,7 @@ uint16_t ili9341_HEIGHT;
 uint8_t type_send=TRANSMIT_NONE;
 LCD_DrawPropTypeDef lcdprop;
 extern uint32_t spi_ticks;
+void spi2_clear_rx(void);
 
 /*-------------------------------------------------------*/
 void ili9341_SendCommand(uint8_t cmd){
@@ -56,7 +56,7 @@ void ili9341_SendCommand(uint8_t cmd){
 		SPI_DC_Port->BSRR = 1 << (SPI_DC_Pin+16); // DC_COMMAND(); GO Down
   }
   SPI_WriteData(&cmd, 1, 5000);
-  SPI_CLEAR_OVRFLAG();
+  spi2_clear_rx();
 }
 
 static void ili9341_SendData(uint8_t* buff, uint16_t buff_size){

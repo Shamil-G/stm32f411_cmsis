@@ -14,6 +14,7 @@ extern uint32_t meter_ticks;
 extern uint32_t adc_ticks;
 extern uint32_t screen_ticks;
 extern uint32_t spi_ticks;
+extern uint32_t usart_ticks;
 extern uint32_t tim5_freq_meter;
 
 void led_upd(void);
@@ -32,6 +33,7 @@ void SysTick_Handler(void) {
   ticks_delay++;
   encoder_ticks++;
   spi_ticks++;
+  usart_ticks++;
 }
 
 #ifndef __delay

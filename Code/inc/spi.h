@@ -1,6 +1,6 @@
 #pragma once
 
-#define USE_DMA
+#define USE_SPI_DMA
 
 #include "stm32f411xe.h"
 
@@ -50,20 +50,11 @@
 
 #define ERROR_TIMEOUT 100
 
-
-#define spi2_clear_ovrflag()		\
-  do{					\
-    __IO uint32_t tmpreg_ovr = 0x00U;	\
-    tmpreg_ovr = SPI2->DR;		\
-    tmpreg_ovr = SPI2->SR;		\
-    UNUSED(tmpreg_ovr);			\
-  }while(0U)
-
 uint8_t SPI2_WriteData(uint8_t* pData, uint16_t Size, uint32_t Timeout);
-void spi2_gpio_init(void);
-void spi_init(SPI_TypeDef *spi);
+void 	spi2_gpio_init(void);
+void 	spi_init(SPI_TypeDef *spi);
 
-#ifdef USE_DMA
+#ifdef USE_SPI_DMA
 
 void dma_spi2_init();
 

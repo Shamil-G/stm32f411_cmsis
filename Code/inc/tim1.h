@@ -28,22 +28,22 @@
 
 #define TIM1_BKIN_Port GPIOA
 #define TIM1_BKIN_Pin  6
-#define TIM1_BKIN_AF    af1
+#define TIM1_BKIN_AF   af1
 
 #define TIM1_ETR_Port  GPIOA
 #define TIM1_ETR_Pin   12
-#define TIM1_CH3_AF   af1
+#define TIM1_CH3_AF    af1
 
 #define TIM1_CH1N_Port GPIOA
 #define TIM1_CH1N_Pin  7
-#define TIM1_CH1N_AF  af1
+#define TIM1_CH1N_AF   af1
 
 #define TIM1_CH2N_Port GPIOB
 #define TIM1_CH2N_Pin  0
-#define TIM1_CH2N_AF  af1
+#define TIM1_CH2N_AF   af1
 
 #define TIM1_CH3N_Port GPIOB
 #define TIM1_CH3N_Pin  1
-#define TIM1_CH2N_AF  af1
+#define TIM1_CH2N_AF   af1
 
 #define SET_CH1_DUTY(value) (TIM1->CCR1=(int)value)

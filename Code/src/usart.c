@@ -6,13 +6,16 @@
  */
 
 #define STM32F411
+
 #include "usart.h"
 #include "gpio.h"
 #include "main.h"
 #include "dma.h"
 
-uint8_t fl_tx, fl_rx;
+volatile uint8_t  usart_status;
+volatile uint32_t usart_ticks;
 volatile uint16_t usart_counter=0;
+
 volatile uint32_t usart_buffer[USART_SIZE_BUFFER];
 
 void usart1_gpio_init() {
@@ -136,14 +139,14 @@ void dma_usart1_init_(){
 #endif
 }
 //---------------------------------------------------------------------------
-void usart1_dma_rx(uint8_t* rxData, uint16_t buff_size, , uint32_t timeout) {
+uint8_t usart1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout) {
 	usart_ticks = 0;
 	usart_status = 0;
 	// While Rx buffer not empty
-	while (!(USART1->SR & USART_SR_RXE) && (usart_ticks < timeout));
+	while (!(USART1->SR & USART_SR_RXNE) && (usart_ticks < timeout));
 
 	DMA2_Stream2->CR &= ~DMA_SxCR_EN;
-	while ((DMA2_Stream2->CR & DMA_SxCR_EN) && (spi_ticks < timeout));
+	while ((DMA2_Stream2->CR & DMA_SxCR_EN) && (usart_ticks < timeout));
 
 	DMA2_Stream2->M0AR = (uint32_t)rxData;			// Set address buf
 	DMA2_Stream2->NDTR = buff_size;					// Set len
@@ -162,7 +165,7 @@ uint8_t usart1_dma_tx(uint8_t * txData, uint16_t buff_size, uint32_t timeout){
 	while (!(USART1->SR & USART_SR_TXE) && (usart_ticks < timeout));
 
 	DMA2_Stream7->CR &= ~DMA_SxCR_EN;
-	while ((DMA2_Stream7->CR & DMA_SxCR_EN) && (spi_ticks < timeout));
+	while ((DMA2_Stream7->CR & DMA_SxCR_EN) && (usart_ticks < timeout));
 
     DMA2_Stream7->M0AR = (uint32_t)txData;			// Set address buf
     DMA2_Stream7->NDTR = buff_size;					// Set len
@@ -180,13 +183,13 @@ void DMA2_Stream2_IRQHandler(void)
 	// Stream x RECEIVE complete interrupt flag - TCIF
 	if(READ_BIT(DMA2->LISR, DMA_LISR_TCIF2) == (DMA_LISR_TCIF2))
 	{
-		DMA2->CR3 &= USART_CR3_DMAR;
+//		USART1->CR3 &= USART_CR3_DMAR;
 		// Stream x clear transfer complete interrupt flag
 		// Writing 1 to this bit clears the corresponding
 		// TCIFx flag in the DMA_LISR register
 		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTCIF2);
-		DMA2->CR3 |= USART_CR3_DMAR;
-		fl_rx = 1;
+//		USART1->CR3 |= USART_CR3_DMAR;
+		usart_status = 1;
 	}
 	// Stream x transfer error interrupt flag - TEIF
 	if(READ_BIT(DMA2->LISR, DMA_LISR_TEIF2) == (DMA_LISR_TEIF2))

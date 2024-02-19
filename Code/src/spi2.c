@@ -134,7 +134,7 @@ uint8_t spi2_dma_tx(uint8_t *data, uint16_t len, uint32_t Timeout){
 }
 
 
-uint8_t spi2_dma_tx_2(uint8_t* pData, uint16_t Size, uint32_t Timeout){
+uint8_t spi2_tx(uint8_t* pData, uint16_t Size, uint32_t Timeout){
 
 	// While Tx buffer not empty
     spi_ticks=0;
@@ -164,9 +164,6 @@ uint8_t spi2_dma_tx_2(uint8_t* pData, uint16_t Size, uint32_t Timeout){
 
 uint8_t SPI2_WriteData(uint8_t* pData, uint16_t Size, uint32_t Timeout)
 {
-//    tx_buf=pData;
-//    spi2_clear_rx();
-
 //	#if (USE_SPI_CRC != 0U)
 //	  /* Reset CRC Calculation */
 //	  if (HSPI.Init.CRCCalculation == SPI_CRCCALCULATION_ENABLE)
@@ -175,11 +172,11 @@ uint8_t SPI2_WriteData(uint8_t* pData, uint16_t Size, uint32_t Timeout)
 //	  }
 //	#endif /* USE_SPI_CRC */
 
-#ifdef USE_DMA
+#ifdef USE_SPI_DMA
 	spi_status = spi2_dma_tx(pData, Size, Timeout);
 #endif
-#ifndef	USE_DMA
-	uint8_t spi2_dma_tx_2(uint8_t* pData, uint16_t Size, uint32_t Timeout);
+#ifndef	USE_SPI_DMA
+	spi_status = spi2_tx(pData, Size, Timeout);
 #endif
 //	spi_status = spi2_dma_tx_2(pData, Size);
 //	status = spi2_dma_tx_2(&bb, 16);
@@ -198,10 +195,10 @@ uint8_t SPI2_WriteData(uint8_t* pData, uint16_t Size, uint32_t Timeout)
 //	  if (HSPI.Init.Direction == SPI_DIRECTION_2LINES)
 //	  {
 
-  spi2_clear_rx();
 
 //	  }
 	//*/
+//	  spi2_clear_rx();
   return spi_status;
 }
 
@@ -213,8 +210,11 @@ void DMA1_Stream4_IRQHandler(void)
   {
     //Clear Channel 4 interrupt flag
     DMA1->HIFCR |= DMA_HIFCR_CTCIF4;
-    if(SPI2->SR & SPI_SR_OVR)
-    	spi2_clear_ovrflag();
+    // Clear SPI_SR_OVR
+    if(SPI2->SR & SPI_SR_OVR){
+		rx_buf = 0;
+		rx_buf = SPI2->DR;
+		rx_buf = SPI2->SR;    }
   }
   if(DMA1->HISR & (DMA_HISR_HTIF4 | // Stream x clear half transfer interrupt flag
 			DMA_HISR_TEIF4 | // Stream x clear transfer error interrupt flag
