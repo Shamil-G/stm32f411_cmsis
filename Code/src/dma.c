@@ -8,7 +8,7 @@ void dma_init(DMA_TypeDef * dma, DMA_Stream_TypeDef *dma_channel){
 	if(dma==DMA2)
 			RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
   // Выставим передачу из памяти в порт SPI
-  dma_channel->CR &= ~((uint32_t)DMA_SxCR_EN);
+  // dma_channel->CR &= ~((uint32_t)DMA_SxCR_EN);
   dma_channel->CR = 0;
   dma_channel->NDTR = 0;
   dma_channel->PAR = 0;

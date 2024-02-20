@@ -124,7 +124,7 @@ void dma_usart1_init_(){
 	// Tx
 	SET_BIT(DMA2_Stream7->CR, DMA_SxCR_CHSEL_2); // Выбор 4 канала
 	DMA2_Stream7->PAR = (uint32_t) & (USART1->DR);	// Set address periphery
-	DMA2_Stream2->CR |=	DMA_SxCR_DIR_0	|	// Направление данных из памяти в периферию
+	DMA2_Stream7->CR |=	DMA_SxCR_DIR_0	|	// Направление данных из памяти в периферию
 						DMA_SxCR_MINC;		// Инкремент памяти включен
 	// Enable DMA transmitter for USART
 

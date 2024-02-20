@@ -45,7 +45,7 @@ void spi2_gpio_init(){
 	#endif
 }
 void spi2_clear_flags(){
-	// For SPI2 Tx
+  // For SPI2 Tx
   DMA1->HIFCR |=  DMA_HIFCR_CTCIF4 |
 		  	  	  DMA_HIFCR_CHTIF4 | // Stream x clear half transfer interrupt flag
 				  DMA_HIFCR_CTEIF4 | // Stream x clear transfer error interrupt flag
