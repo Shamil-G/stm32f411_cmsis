@@ -11,11 +11,12 @@ volatile uint32_t encoder_ticks = 0;
 volatile uint16_t s1_ticks = 0;
 extern uint32_t freqMeter;
 extern uint32_t meter_ticks;
-extern uint32_t adc_ticks;
-extern uint32_t screen_ticks;
-extern uint32_t spi_ticks;
-extern uint32_t usart_ticks;
 extern uint32_t tim5_freq_meter;
+extern uint16_t adc_ticks;
+extern uint16_t screen_ticks;
+extern uint16_t spi_ticks;
+extern uint16_t usart_ticks;
+extern uint16_t i2c_ticks;
 
 void led_upd(void);
 void freqMeter_upd(void);
@@ -28,12 +29,13 @@ void init_SysTick(){
 
 void SysTick_Handler(void) {
 //  freq_ticks++;
+  ticks_delay++;
   adc_ticks++;
   screen_ticks++;
-  ticks_delay++;
   encoder_ticks++;
   spi_ticks++;
   usart_ticks++;
+  i2c_ticks++;
 }
 
 #ifndef __delay
