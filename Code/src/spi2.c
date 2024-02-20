@@ -75,13 +75,15 @@ void spi_init(SPI_TypeDef *spi){
 	//	SPI_CR1_BR_1 | // // 50/4=12,5 MHz - default
 	SPI_CR1_MSTR; // Master Configuration
 
-  // Включаем SPI
-  //Port SPI2 have to use DMA
+// Включаем SPI
+//Port SPI2 have to use DMA
+#ifdef USE_SPI_DMA
   spi->CR2 |= SPI_CR2_TXDMAEN;
+#endif
   spi->CR1 |= SPI_CR1_SPE;
-//#ifndef USE_DMA
+#ifndef USE_SPI_DMA
   NVIC_EnableIRQ(SPI2_IRQn);
-//#endif
+#endif
 }
 
 void dma_spi2_init(){

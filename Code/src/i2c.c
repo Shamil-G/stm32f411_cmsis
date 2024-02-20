@@ -76,12 +76,18 @@ void init_i2c(I2C_TypeDef * p_i2c){
 	//	I2C1->TRISE = (1000 / (I2C_CR2_FREQ_1 | I2C_CR2_FREQ_4 | I2C_CR2_FREQ_5)) + 1;
 	p_i2c->TRISE = (1000 / (I2C1->CR2 & I2C_CR2_FREQ_Msk)) + 1;
 
+
+//	Разрешим генерацию условия ACK после приёма байта
+//	p_i2c->CR1 |= I2C_CR1_ACK;
+
 	// Enable I2C
 	p_i2c->CR1 |= I2C_CR1_PE_Msk;
 
-	//	Разрешим генерацию условия ACK после приёма байта
-	//	p_i2c->CR1 |= I2C_CR1_ACK;
-#ifndef USE_USART_DMA
+#ifdef USE_I2C_DMA
+	p_i2c->CR2 |= I2C_CR2_DMAEN;
+#endif
+
+#ifndef USE_I2C_DMA
 	NVIC_EnableIRQ(I2C1_IRQn);
 #endif
 };
@@ -115,7 +121,7 @@ void dma_i2c1_init() {
 #endif
 };
 //---------------------------------------------------------------------------
-uint8_t usart1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout) {
+uint8_t i2c1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout) {
 	i2c_ticks = 0;
 	i2c_status = 1;
 	// While Rx buffer not empty
@@ -197,7 +203,6 @@ void i2c_restart(I2C_TypeDef * p_i2c){
 	Delay(2);
 }
 
-
 void i2c_stop(I2C_TypeDef * p_i2c){
 	//	Вызвать функцию дороже чем две команды
 		p_i2c->CR1 |= I2C_CR1_STOP;
@@ -208,7 +213,6 @@ void i2c_stop(I2C_TypeDef * p_i2c){
 		Delay(2);
 		SET_BIT(p_i2c->CR1, I2C_CR1_PE);
 }
-
 
 uint8_t i2c_call_device(I2C_TypeDef * p_i2c, int8_t addr_device, uint8_t mode, uint32_t timeout_ms){
 	if(p_i2c->SR2 & I2C_SR2_BUSY){
