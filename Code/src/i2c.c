@@ -5,10 +5,7 @@
  *      Author: sguss
  */
 #include "i2c.h"
-#include "gpio.h"
-#include "SysTick.h"
 
-extern volatile uint32_t Delay_i2c;
 uint16_t i2c_ticks;
 uint8_t	 i2c_status;
 
@@ -129,7 +126,7 @@ uint8_t i2c1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout) {
 	i2c_ticks = 0;
 	i2c_status = 1;
 	// While Rx buffer not empty
-	while (!(I2C1->SR & I2C_SR_RXNE) && (i2c_ticks < timeout));
+//	while (!(I2C1->SR & I2C_SR_RXNE) && (i2c_ticks < timeout));
 
 	DMA1_Stream0->CR &= ~DMA_SxCR_EN;
 	while ((DMA1_Stream0->CR & DMA_SxCR_EN) && (i2c_ticks < timeout));
@@ -148,9 +145,9 @@ uint8_t i2c1_dma_tx(uint8_t* data, uint16_t len, uint32_t Timeout) {
 	i2c_ticks = 0;
 	i2c_status = 1;
 	// While Tx buffer not empty
-	while (!(I2C1->SR & I2C_SR_TXE) && (i2c_ticks < Timeout));
+//	while (!(I2C1->SR & I2C_SR_TXE) && (i2c_ticks < Timeout));
 	// while SPI not busy
-	while ((I2C1->SR & SPI_SR_BSY) && (i2c_ticks < Timeout));
+//	while ((I2C1->SR & SPI_SR_BSY) && (i2c_ticks < Timeout));
 	// Отключаем DMA канал
 	DMA1_Stream6->CR &= ~DMA_SxCR_EN;
 	while ((DMA1_Stream6->CR & DMA_SxCR_EN) && (i2c_ticks < Timeout));
@@ -176,7 +173,7 @@ uint8_t successWaitTXE(I2C_TypeDef * p_i2c, uint32_t timeout_ms){
 			p_i2c->CR1 |= I2C_CR1_STOP;
 			return 0;
 		}
-		if(!Delay_i2c){
+		if(i2c_ticks >= timeout_ms){
 			p_i2c->CR1 |= I2C_CR1_STOP;
 			return 0;
 		}
@@ -192,7 +189,7 @@ uint8_t successWaitBTF(I2C_TypeDef * p_i2c, uint32_t timeout_ms){
 			p_i2c->CR1 |= I2C_CR1_STOP;
 			return 0;
 		}
-		if(!Delay_i2c){
+		if(i2c_ticks >= timeout_ms){
 			p_i2c->CR1 |= I2C_CR1_STOP;
 			return 0;
 		}
@@ -247,7 +244,7 @@ uint8_t i2c_call_device(I2C_TypeDef * p_i2c, int8_t addr_device, uint8_t mode, u
 
 	//	Wait AF or ADDR
 	while( 	(READ_BIT(p_i2c->SR1, I2C_SR1_AF) == 0) && // При получении NACK ???
-	   	(READ_BIT(p_i2c->SR1, I2C_SR1_ADDR) == 0 && 
+	   	(READ_BIT(p_i2c->SR1, I2C_SR1_ADDR) == 0) &&
 		(i2c_ticks < timeout_ms) );
 	if( i2c_ticks > timeout_ms ) return 0;
 //		clearTimer(num_timer);
@@ -259,10 +256,10 @@ uint8_t i2c_call_device(I2C_TypeDef * p_i2c, int8_t addr_device, uint8_t mode, u
 		// СБрос бита ADDR производится чтением SR1, then SR2
 		p_i2c->SR1;
 		p_i2c->SR2;
-		Delay_i2c = timeout_ms;
+		i2c_ticks = 0;
 		while( 	READ_BIT(p_i2c->SR1, I2C_SR1_TXE) == 0 &&
 			(i2c_ticks < timeout_ms) );
-		if(i2c_ticks >= timeout_ms || READ_BIT(p_i2c->SR1, I2C_SR1_AF) )
+		if( (i2c_ticks >= timeout_ms) || READ_BIT(p_i2c->SR1, I2C_SR1_AF) )
 				return 0;
 		return 1;
 	}
@@ -346,7 +343,7 @@ uint8_t i2c_write(I2C_TypeDef * p_i2c, int8_t addr_device, uint8_t* data, uint16
 	//	Wait AF or ADDR
 	i2c_ticks = 0;
 	while(	(READ_BIT(p_i2c->SR1, I2C_SR1_AF) == 0) && // При получении NACK ???
-		(READ_BIT(p_i2c->SR1, I2C_SR1_ADDR) == 0 &&
+		(READ_BIT(p_i2c->SR1, I2C_SR1_ADDR)) == 0 &&
 		(i2c_ticks < timeout_ms) && status );
 	if ( i2c_ticks >= timeout_ms ) status=0;
 
@@ -355,7 +352,7 @@ uint8_t i2c_write(I2C_TypeDef * p_i2c, int8_t addr_device, uint8_t* data, uint16
 		uint8_t status = (p_i2c->SR1 |	p_i2c->SR2);
 		i2c_ticks = 0;
 		while( READ_BIT(p_i2c->SR1, I2C_SR1_TXE) == 0 && status && (i2c_ticks < timeout_ms));
-		if(!i2c_ticks >= timeout_ms || READ_BIT(p_i2c->SR1, I2C_SR1_AF)) status=0;
+		if( (i2c_ticks >= timeout_ms) || READ_BIT(p_i2c->SR1, I2C_SR1_AF)) status=0;
 	}
 
 //	Write DATA
@@ -402,7 +399,7 @@ uint8_t i2c_read(I2C_TypeDef * p_i2c, int8_t addr_device, uint8_t* data, uint16_
 	//	Wait AF or ADDR
 	i2c_ticks = 0;
 	while(	(READ_BIT(p_i2c->SR1, I2C_SR1_AF) == 0) && // При получении NACK ???
-		(READ_BIT(p_i2c->SR1, I2C_SR1_ADDR) == 0 &&
+		(READ_BIT(p_i2c->SR1, I2C_SR1_ADDR) == 0) &&
 		(i2c_ticks < timeout_ms) && status );
 	if ( i2c_ticks >= timeout_ms ) status=0;
 

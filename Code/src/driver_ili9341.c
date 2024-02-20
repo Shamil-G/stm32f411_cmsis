@@ -8,13 +8,11 @@ float    i_voltage, i_current;
 float    o_voltage, o_current;
 uint32_t screen_ticks;
 
-extern uint32_t encoder_ticks;
-extern uint32_t bounce_encoder;
 extern uint32_t freq_ticks;
 extern uint32_t freqMeter;
 extern uint32_t adc_ticks;
-
-
+extern uint16_t encoder_ticks;
+extern uint16_t bounce_encoder;
 
 char i_voltage_buf[48];
 char i_current_buf[48];
@@ -237,7 +235,7 @@ void show_ili9341_monitor(){
 	  ili9341_String(177,(10+0.3)*lcdprop.pFont->Height,o_freq_adc_buf);
   }
 //  sprintf(o_status,"Screen: %ldms, Bounce: %d    ", ticks, Bounce );
-  sprintf(o_status,"Screen:%4ldms, Bounce:%4ldms ", screen_ticks, bounce_encoder );
+  sprintf(o_status,"Screen:%4ldms, Bounce:%4dms ", screen_ticks, bounce_encoder );
   ili9341_String(7,210,o_status);
 
   screen_ticks=0;

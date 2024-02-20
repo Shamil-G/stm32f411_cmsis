@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gpio.h"
+#include "main.h"
 
 #define USE_I2C_DMA
 

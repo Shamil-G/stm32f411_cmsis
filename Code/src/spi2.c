@@ -12,10 +12,8 @@
 #define dma4spi	    DMA1
 #define READY_DATA_REGISTR 	(SPI2->SR & SPI_SR_TXE)
 
-uint32_t spi_ticks=0;
 uint32_t rx_buf=0UL;
-uint8_t  *tx_buf;
-
+uint16_t spi_ticks=0;
 uint8_t	 spi_status;
 
 

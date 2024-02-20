@@ -8,13 +8,11 @@
 #define STM32F411
 
 #include "usart.h"
-#include "gpio.h"
-#include "main.h"
-#include "dma.h"
 
-volatile uint8_t  usart_status;
-volatile uint32_t usart_ticks;
+
+volatile uint16_t usart_ticks;
 volatile uint16_t usart_counter=0;
+volatile uint8_t  usart_status;
 
 volatile uint32_t usart_buffer[USART_SIZE_BUFFER];
 
@@ -76,20 +74,6 @@ void usart_init(USART_TypeDef* usart){
 }
 
 void dma_usart1_init_(){
-  // Page 170 RM0383:
-  // 
-  // USART1: Channel_4
-  // Rx USART1: DMA2_Stream2_IRQn or DMA2_Stream5_IRQn interrupt
-  // Tx USART1: DMA2_Stream7_IRQn interrupt
-  // 
-  // USART6: Channel_5
-  // Rx USART6: DMA2_Stream1_IRQn or DMA2_Stream2_IRQn interrupt
-  // Tx USART6: DMA2_Stream6_IRQn or DMA2_Stream7_IRQn interrupt
-  // 
-  // USART2: Channel_6 for Stream7 and Channel_4 for Stream5 and Stream6
-  // Rx USART2: DMA1_Stream5_IRQn or DMA2_Stream7_IRQn interrupt
-  // Tx USART2: DMA2_Stream6_IRQn
-  // 
 //  DMA2_Stream2->CR = 0x0UL;
 /*
   DMA2_Stream2->CR =
