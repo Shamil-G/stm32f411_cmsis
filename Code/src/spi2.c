@@ -8,14 +8,11 @@
 //#define SPI_MISO_Pin	14
 
 #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
-#define dmaStreamTx DMA1_Stream4
-#define dma4spi	    DMA1
 #define READY_DATA_REGISTR 	(SPI2->SR & SPI_SR_TXE)
 
 uint32_t rx_buf=0UL;
 uint16_t spi_ticks=0;
 uint8_t	 spi_status;
-
 
 void spi2_clear_rx(){
 	if(	SPI2->SR & SPI_SR_OVR ||
@@ -26,8 +23,6 @@ void spi2_clear_rx(){
 		rx_buf = SPI2->SR;
 	}
 }
-
-extern unsigned long durationMs;
 
 void spi2_gpio_init(){
 	  // SCK
