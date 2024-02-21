@@ -38,7 +38,7 @@ inline uint32_t getFreqPWM(void){
 }
 
 float getFreqDuty(void){
-  float result;
+  float result=0;
 
   if(selected_timer==TIMER1){
       return currDutyTim1/(2*10);
