@@ -35,10 +35,12 @@ uint8_t SHT31_CRC_8(uint8_t* data, int len) {
 }
 
 float SHT31_GetHumidity() {
-	return 100.0*(sht31.humidity_raw)/65535;
+	float res = 100.0*(sht31.humidity_raw)/65535;
+	return res;
 }
 float SHT31_GetTemperature() {
-	return 175.0*(sht31.temperature_raw)/65535 - 45;
+	float res = 175.0*(sht31.temperature_raw)/65535 - 45;
+	return res;
 }
 
 uint16_t SHT31_GetHumidity_raw() {
@@ -55,6 +57,7 @@ uint8_t sht31_request(I2C_TypeDef* p_i2c, uint8_t addr_device, uint32_t timeout_
 
 	//	Отправим команду на чтение
 	status = i2c_write(p_i2c, addr_device, command, sizeof(command), timeout_ms);
+//	status = i2c1_dma_tx_2(p_i2c, addr_device, command, sizeof(command), timeout_ms);
 	if(status)
 	{
 //		Delay(timeout_ms);

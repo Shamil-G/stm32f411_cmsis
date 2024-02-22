@@ -32,6 +32,10 @@ void Delay(uint32_t ms);
 //#define USE_SYSTICK
 
 // SPI Section
+
+void init_i2c(I2C_TypeDef * p_i2c);
+void dma_i2c1_init();
+
 #define USE_SPI_ILI9341
 
 #define SPI_MOSI_Port	GPIOB

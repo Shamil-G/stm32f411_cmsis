@@ -6,6 +6,14 @@ void toggle_led1(void);
 void enable_led1(void);
 //void meterPortOn();
 void FreqMeterOn(void);
+float SHT31_GetHumidity();
+float SHT31_GetTemperature();
+uint8_t sht31_request(I2C_TypeDef* p_i2c, uint8_t addr_device, uint32_t timeout_ms);
+
+volatile uint8_t addr_device = 0x44; // Address sht31
+uint8_t status;
+float humidity;
+float temper;
 
 int main(void){
       SystemUp();
@@ -13,27 +21,33 @@ int main(void){
 //      InitMainTick();
       init_SysTick();
 
-      init_pwm(); 		// 17.02.2024
+//      init_pwm(); 		// 17.02.2024
       EncoderOn();
 
 //      change_pwm_mode(sinusFifty);
 
-      spi2_gpio_init();
-      spi_init(SPI2);
-      dma_spi2_init();
+//      spi2_gpio_init();
+//      spi_init(SPI2);
+//      dma_spi2_init();
 
-      ili9341_gpio_init();
-      ili9341_init(240,320);
-      ili9341_primary_tune();
+//      ili9341_gpio_init();
+//      ili9341_init(240,320);
+//      ili9341_primary_tune();
 
-	InitADC(); 			// 17.02.2024
+//	InitADC(); 			// 17.02.2024
 //	meterPortOn();
-	FreqMeterOn(); 		// 17.02.2024
+//	FreqMeterOn(); 		// 17.02.2024
 //	Phase3_InitHrpwm();
+  	init_i2c(I2C1);
+  	dma_i2c1_init();
+
 
 	enable_led1();
 	while(1){
-	  show_ili9341_monitor();
+		status = sht31_request(I2C1, addr_device, 500);
+		humidity=SHT31_GetHumidity();
+		temper=SHT31_GetTemperature();
+//	  show_ili9341_monitor();
 	}
 }
 
