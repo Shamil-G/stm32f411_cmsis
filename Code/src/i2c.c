@@ -164,30 +164,30 @@ uint8_t i2c1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout) {
 		i2c_status = i2c_ticks;
 	return i2c_status;
 }
-uint8_t i2c1_dma_rx_2(uint8_t addr, uint8_t* data, uint8_t len, uint32_t timeout_ms)
+uint8_t i2c1_dma_rx_2(I2C_TypeDef* p_i2c, uint8_t addr, uint8_t* data, uint8_t len, uint32_t timeout_ms)
 {
 	i2c_ticks = 0;
-	while (I2C1->SR2 & I2C_SR2_BUSY && (i2c_ticks < timeout_ms));
-	if (I2C1->SR2 & I2C_SR2_BUSY){
-		i2c_stop(I2C1);
+	while (p_i2c->SR2 & I2C_SR2_BUSY && (i2c_ticks < timeout_ms));
+	if (p_i2c->SR2 & I2C_SR2_BUSY){
+		i2c_stop(p_i2c);
 		return 0;
 	}
 
-	I2C1->CR1 |= I2C_CR1_START;               //Start genera
-	while (!(I2C1->SR1 & I2C_SR1_SB) );         //Wait start condition generated
-	I2C1->CR1 |= I2C_CR1_ACK;                 //Enable acknowledge
-	I2C1->DR = addr;                          //Write slave address
+	p_i2c->CR1 |= I2C_CR1_START;               //Start genera
+	while (!(p_i2c->SR1 & I2C_SR1_SB) );         //Wait start condition generated
+	p_i2c->CR1 |= I2C_CR1_ACK;                 //Enable acknowledge
+	p_i2c->DR = addr;                          //Write slave address
 	//Wait send addsess
-	while (!(I2C1->SR1 & I2C_SR1_ADDR) && (i2c_ticks < timeout_ms))
+	while (!(p_i2c->SR1 & I2C_SR1_ADDR) && (i2c_ticks < timeout_ms))
 	{
-		if (I2C1->SR1 & I2C_SR1_AF)          //Acknowledge failure
+		if (p_i2c->SR1 & I2C_SR1_AF)          //Acknowledge failure
 		{
-			I2C1->CR1 |= I2C_CR1_STOP;       //Stop generation
+			p_i2c->CR1 |= I2C_CR1_STOP;       //Stop generation
 			return 0;
 		}
 	}
 	// Сброс бита ADDR производится чтением SR1, then SR2
-	sr_status = I2C1->SR1 | I2C1->SR2;
+	sr_status = p_i2c->SR1 | p_i2c->SR2;
 	//---- Прверить необходимость
 	DMA1_Stream0->CR &= ~DMA_SxCR_EN;            //Enable DMA
 	//----
@@ -197,8 +197,8 @@ uint8_t i2c1_dma_rx_2(uint8_t addr, uint8_t* data, uint8_t len, uint32_t timeout
 	//Wait recive all data
 	while (!(DMA1->LISR & DMA_LISR_TCIF0) && (i2c_ticks < timeout_ms));
 	DMA1->LIFCR |= DMA_LIFCR_CTCIF0;          	//Clear DMA event
-	I2C1->CR1 |= I2C_CR1_STOP;                	//Stop generation
-	I2C1->CR1 &= ~I2C_CR1_ACK;                	//Disable acknowledge
+	p_i2c->CR1 |= I2C_CR1_STOP;                	//Stop generation
+	p_i2c->CR1 &= ~I2C_CR1_ACK;                	//Disable acknowledge
 	return 1;
 }
 
@@ -226,37 +226,38 @@ uint8_t i2c1_dma_tx(uint8_t* data, uint16_t len, uint32_t Timeout) {
 		i2c_status = 0;
 	return i2c_status;
 }
-uint8_t i2c1_dma_tx_2(uint8_t addr, uint8_t* data, uint8_t len, uint32_t timeout_ms)
+uint8_t i2c1_dma_tx_2(I2C_TypeDef* p_i2c, uint8_t addr, uint8_t* data, uint8_t len, uint32_t timeout_ms)
 {
 	i2c_ticks = 0;
 	//Wait if bus busy
-	while (I2C1->SR2 & I2C_SR2_BUSY && (i2c_ticks < timeout_ms));
-	if(I2C1->SR2 & I2C_SR2_BUSY){
-		i2c_stop(I2C1);
+	while (p_i2c->SR2 & I2C_SR2_BUSY && (i2c_ticks < timeout_ms));
+	if(p_i2c->SR2 & I2C_SR2_BUSY){
+		i2c_stop(p_i2c);
 		return 0;
 	}
 
-	I2C1->CR1 |= I2C_CR1_START;               //Start generation
-	while (!(I2C1->SR1 & I2C_SR1_SB));         //Wait start condition generated
-	I2C1->DR = addr;                          //Write slave address
+	p_i2c->CR1 |= I2C_CR1_START;               //Start generation
+	while (!(p_i2c->SR1 & I2C_SR1_SB));         //Wait start condition generated
+	p_i2c->DR = addr;                          //Write slave address
 	//Wait send addsess
-	while (!(I2C1->SR1 & I2C_SR1_ADDR) && (i2c_ticks < timeout_ms))
+	while (!(p_i2c->SR1 & I2C_SR1_ADDR) && (i2c_ticks < timeout_ms))
 	{
-		if (I2C1->SR1 & I2C_SR1_AF)          //Acknowledge failure
+		if (p_i2c->SR1 & I2C_SR1_AF)          //Acknowledge failure
 		{
-			I2C1->CR1 |= I2C_CR1_STOP;       //Stop generation
+			p_i2c->CR1 |= I2C_CR1_STOP;       //Stop generation
 			return 0;
 		}
 	}
 	// Сброс бита ADDR производится чтением SR1, then SR2
-	sr_status = I2C1->SR1 | I2C1->SR2;
+	sr_status = p_i2c->SR1 | p_i2c->SR2;
 
-	DMA1_Stream6->M0AR = (uint32_t)data;        //Set address buf
-	DMA1_Stream6->NDTR = len;                 //Set len
-	DMA1_Stream6->CR |= DMA_SxCR_EN;            //Enable DMA
-	while (!(I2C1->SR1 & I2C_SR1_BTF) && (i2c_ticks < timeout_ms));        //Wait transmit all data
-	DMA1->HIFCR |= DMA_HIFCR_CTCIF6;          //Clear DMA event
-	I2C1->CR1 |= I2C_CR1_STOP;                //Stop generation
+	DMA1_Stream6->M0AR = (uint32_t)data;	//Set address buf
+	DMA1_Stream6->NDTR = len;				//Set len
+	DMA1_Stream6->CR |= DMA_SxCR_EN;		//Enable DMA
+	while (!(p_i2c->SR1 & I2C_SR1_BTF) && (i2c_ticks < timeout_ms));        //Wait transmit all data
+	DMA1->HIFCR |= DMA_HIFCR_CTCIF6;		//Clear DMA event
+	p_i2c->CR1 |= I2C_CR1_STOP;				//Stop generation
+	if(i2c_ticks >= timeout_ms || READ_BIT(p_i2c->SR1, I2C_SR1_AF)) return 0;
 	return 1;
 }
 //---------------------------------------------------------------------------
