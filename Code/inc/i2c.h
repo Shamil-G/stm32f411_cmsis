@@ -28,7 +28,8 @@
 	// Tx: DMA1_Stream5_IRQn
 
 	void dma_i2c_init();
-	uint8_t i2c1_dma_tx_2(I2C_TypeDef* p_i2c, uint8_t addr, uint8_t* data, uint16_t len, uint32_t timeout_ms);
+	uint8_t i2c1_dma_tx(I2C_TypeDef* p_i2c, uint8_t addr, uint8_t* data, uint16_t len, uint32_t timeout_ms);
+	uint8_t i2c1_dma_rx(I2C_TypeDef* p_i2c, uint8_t addr, uint8_t* data, uint16_t len, uint32_t timeout_ms);
 
 #endif
 

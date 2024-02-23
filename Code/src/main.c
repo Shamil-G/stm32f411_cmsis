@@ -14,6 +14,7 @@ volatile uint8_t addr_device = 0x44; // Address sht31
 uint8_t status;
 float humidity;
 float temper;
+extern uint8_t tx_ready;
 
 int main(void){
       SystemUp();
@@ -39,14 +40,16 @@ int main(void){
 //	FreqMeterOn(); 		// 17.02.2024
 //	Phase3_InitHrpwm();
   	init_i2c(I2C1);
-  	dma_i2c1_init();
-
 
 	enable_led1();
 	while(1){
 		status = sht31_request(I2C1, addr_device, 500);
-		humidity=SHT31_GetHumidity();
-		temper=SHT31_GetTemperature();
+//		if(tx_ready==1){
+			humidity=SHT31_GetHumidity();
+			temper=SHT31_GetTemperature();
+//		}
+		Delay(500);
+		toggle_led1();
 //	  show_ili9341_monitor();
 	}
 }

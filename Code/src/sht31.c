@@ -56,8 +56,8 @@ uint8_t sht31_request(I2C_TypeDef* p_i2c, uint8_t addr_device, uint32_t timeout_
 	uint8_t buffer[6];
 
 	//	Отправим команду на чтение
-	status = i2c_write(p_i2c, addr_device, command, sizeof(command), timeout_ms);
-//	status = i2c1_dma_tx_2(p_i2c, addr_device, command, sizeof(command), timeout_ms);
+//	status = i2c_write(p_i2c, addr_device, command, sizeof(command), timeout_ms);
+	status = i2c1_dma_tx(p_i2c, addr_device, command, sizeof(command), timeout_ms);
 	if(status)
 	{
 //		Delay(timeout_ms);
@@ -68,7 +68,8 @@ uint8_t sht31_request(I2C_TypeDef* p_i2c, uint8_t addr_device, uint32_t timeout_
 			//	Задержка для измерения
 			Delay(20);
 			// Read Result
-			status = i2c_read(p_i2c, addr_device, buffer, 6, timeout_ms);
+//			status = i2c_read(p_i2c, addr_device, buffer, 6, timeout_ms);
+			status = i2c1_dma_rx(p_i2c, addr_device, buffer, 6, timeout_ms);
 
 			if(status){
 				if(buffer[2] != SHT31_CRC_8(&buffer[0], 2)) {
