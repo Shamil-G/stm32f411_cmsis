@@ -2,7 +2,19 @@
 
 #include "main.h"
 
-#define USE_SPI_DMA
+#define SPI_MOSI_Port	GPIOB
+#define SPI_MOSI_Pin	15
+#define SPI_SCK_Port	GPIOB
+#define SPI_SCK_Pin	13
+#define SPI_MISO_Port	GPIOB
+#define SPI_MISO_Pin	14
+
+#ifndef USE_SPI_ILI9341
+
+#define SPI_NSS_Port	GPIOB
+#define SPI_NSS_Pin		12
+
+#endif
 
 #ifdef USE_SPI_DMA
 	// STM32F411, Page 170 of RM0383:
@@ -40,6 +52,8 @@
 	// Channel_5
 	// Tx SPI5: DMA2_Stream5_IRQn interrupt
 void dma_spi2_init();
+int  spi2_dma_ready();
+void spi2_dma_enable();
 
 #endif
 
@@ -50,12 +64,12 @@ void dma_spi2_init();
 #define spi2_enable() 	SET_BIT(SPI2->CR1, SPI_CR1_SPE)
 #define spi2_ready()	READ_BIT(SPI2->CR1, SPI_CR1_SPE)
 #define spi2_end_operation()	while(SPI2->SR & SPI_SR_BSY)
-
-
 #define ERROR_TIMEOUT 100
 
+void spi_init(SPI_TypeDef *spi);
+void spi2_gpio_init(void);
+void ili9341_gpio_init(void);
+void spi_ili9341_init(void);
 uint8_t SPI2_WriteData(uint8_t* pData, uint16_t Size, uint32_t Timeout);
-void 	spi2_gpio_init(void);
-void 	spi_init(SPI_TypeDef *spi);
 
 

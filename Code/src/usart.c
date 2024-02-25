@@ -37,42 +37,6 @@ void usart1_gpio_init() {
 		USART1_af); //AF8 for USART6
 }
 
-void usart_init(USART_TypeDef* usart){
-	// Включаем тактирование
-	if(usart==USART1 || usart == USART6)
-		RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
-	if (usart == USART2)
-		RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
-
-	// INIT SPEED:
-	// https://www.youtube.com/watch?v=-icZ4Zv_qB4&list=PLu9BJ8Y5m4bSrp6WGYSAlRBp6NowvChqn&index=6
-	// 115kbit
-	// baud = 115200 = Fclk1/ ( 16 * USARTDIV ) => USARTDIV=Fpclk2/(115000*16) = 54,0
-	// Then DIV_MANTISSA = 54
-	// 	  DIV_FRACTIOIN = 0.0 * 16 = 0  - nearest real number
-	MODIFY_REG(usart->BRR, USART_BRR_DIV_Fraction_Msk, 0 << USART_BRR_DIV_Fraction_Pos);
-	MODIFY_REG(usart->BRR, USART_BRR_DIV_Mantissa_Msk, 54 << USART_BRR_DIV_Mantissa_Pos);
-	// CLEAN CR1
-	usart->CR1=0x00L;
-	usart->GTPR=0L;
-	usart->CR2=0L;
-	usart->CR3=0L;
-	// 0: 1 Start bit, 8 Data bits, n Stop bit
-	// CLEAR_BIT(USART1->CR1, USART1_CR1_M);
-	// ENABLED USART1
-	usart->CR1 |= USART_CR1_UE;
-
-#ifdef USE_USART_DMA
-	usart->CR3 |= USART_CR3_DMAT | USART_CR3_DMAR;
-#endif
-
-#ifndef USE_USART_DMA
-	usart->CR1 |= USART_CR1_TE | USART_CR1_RE;
-	// Прерывание по приему данных
-	usart->CR1 = USART_CR1_RXNEIE | USART_CR1_IDLEIE;
-#endif
-}
-
 void dma_usart1_init_(){
 //  DMA2_Stream2->CR = 0x0UL;
 /*
@@ -122,8 +86,47 @@ void dma_usart1_init_(){
 	NVIC_EnableIRQ(USART1_IRQn);
 #endif
 }
+
+void usart_init(USART_TypeDef* usart){
+	usart1_gpio_init();
+
+	// Включаем тактирование
+	if(usart==USART1 || usart == USART6)
+		RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+	if (usart == USART2)
+		RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+
+	// INIT SPEED:
+	// https://www.youtube.com/watch?v=-icZ4Zv_qB4&list=PLu9BJ8Y5m4bSrp6WGYSAlRBp6NowvChqn&index=6
+	// 115kbit
+	// baud = 115200 = Fclk1/ ( 16 * USARTDIV ) => USARTDIV=Fpclk2/(115000*16) = 54,0
+	// Then DIV_MANTISSA = 54
+	// 	  DIV_FRACTIOIN = 0.0 * 16 = 0  - nearest real number
+	MODIFY_REG(usart->BRR, USART_BRR_DIV_Fraction_Msk, 0 << USART_BRR_DIV_Fraction_Pos);
+	MODIFY_REG(usart->BRR, USART_BRR_DIV_Mantissa_Msk, 54 << USART_BRR_DIV_Mantissa_Pos);
+	// CLEAN CR1
+	usart->CR1=0x00L;
+	usart->GTPR=0L;
+	usart->CR2=0L;
+	usart->CR3=0L;
+	// 0: 1 Start bit, 8 Data bits, n Stop bit
+	// CLEAR_BIT(USART1->CR1, USART1_CR1_M);
+	// ENABLED USART1
+	usart->CR1 |= USART_CR1_UE;
+
+#ifdef USE_USART_DMA
+	dma_usart1_init_();
+	usart->CR3 |= USART_CR3_DMAT | USART_CR3_DMAR;
+#endif
+
+#ifndef USE_USART_DMA
+	usart->CR1 |= USART_CR1_TE | USART_CR1_RE;
+	// Прерывание по приему данных
+	usart->CR1 = USART_CR1_RXNEIE | USART_CR1_IDLEIE;
+#endif
+}
 //---------------------------------------------------------------------------
-uint8_t usart1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout) {
+uint8_t usart1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout){
 	usart_ticks = 0;
 	usart_status = 0;
 	// While Rx buffer not empty

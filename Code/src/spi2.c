@@ -1,4 +1,5 @@
 #include "main.h"
+#include "spi.h"
 
 //#define SPI_MOSI_Port	GPIOB
 //#define SPI_MOSI_Pin	15

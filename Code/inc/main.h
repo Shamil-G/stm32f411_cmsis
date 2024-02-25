@@ -1,17 +1,49 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
+#define STM32F411
+
+#define USE_SYSTICK
+
+#define USE_USART
+#define USE_USART_DMA
+
+//#define USE_SPI
+//#define USE_SPI_DMA
+
+//#define USE_I2C
+//#define USE_I2C_DMA
+
+//#define USE_ADC
+
+#define USE_ENCODER
+
+
 #include "stm32f4xx.h"
 #include "adc-inject.h"
 #include "gpio.h"
-#include "spi.h"
 #include "dma.h"
 #include "tim1.h"
 
+#ifdef USE_SYSTICK
+#include "SysTick.h"
+#endif
+
+#ifdef USE_SPI
+#define USE_SPI_ILI9341
+#include "spi.h"
 #include "spi_ili9341.h"
 #include "driver_ili9341.h"
+#endif
 
-#define USE_SYSTICK
+#ifdef USE_USART
+#include "usart.h"
+#endif
+
+#ifdef USE_ENCODER
+#include "encoder.h"
+#endif
+
 #define _PLUG_NEWLIB
 
 void Delay(uint32_t ms);
@@ -36,26 +68,7 @@ void Delay(uint32_t ms);
 void init_i2c(I2C_TypeDef * p_i2c);
 void dma_i2c1_init();
 
-#define USE_SPI_ILI9341
-
-#define SPI_MOSI_Port	GPIOB
-#define SPI_MOSI_Pin	15
-#define SPI_SCK_Port	GPIOB
-#define SPI_SCK_Pin	13
-#define SPI_MISO_Port	GPIOB
-#define SPI_MISO_Pin	14
-
-#ifndef USE_SPI_ILI9341
-
-#define SPI_NSS_Port	GPIOB
-#define SPI_NSS_Pin	12
-
-#endif
-
 // Encoder Section
-#define EncTimer  	TIM3
-#define EncTimerIRQ	TIM3_IRQn
-
 // ADC Section
 #define ADCTimer TIM4
 
@@ -82,12 +95,6 @@ extern uint8_t  posFreqPWM;
 extern uint16_t  currDutyTim1;
 extern uint32_t listFreqPWMPSC[];
 
-struct encValue{
-	uint32_t prevValue;
-	uint32_t prevCntMainTick;
-	uint32_t prevMainTick;
-};
-
 typedef  enum{
   TIMER1 = 1,
   TIMER2 = 2
@@ -109,8 +116,6 @@ typedef  enum{
 } MenuEdit;
 extern MenuEdit item_menu_status;
 
-void init_SysTick(void);
-
 uint32_t getFreqPWM(void);
 //void spi_master_init(void);
 
@@ -123,17 +128,7 @@ typedef enum {
 
 void change_pwm_mode(ModePWM mode);
 
-
-void spi_init(SPI_TypeDef *spi);
-void spi2_gpio_init(void);
-void ili9341_gpio_init(void);
-void spi_ili9341_init(void);
-int  spi2_dma_ready();
-void spi2_dma_enable();
-
 void SystemUp();
-void EncoderOn(void);
-void EncoderValue(void);
 void led1_on(void);
 void led1_off(void);
 void init_pwm_tim3(void);
@@ -169,15 +164,14 @@ uint32_t getFreqMeter(void);
 float getFreqDuty(void);
 void setFreqMeterPSK(uint16_t psk);
 
+#ifdef USE_ADC
+
 float getInputVoltage(void);
 float getOutputVoltage(void);
 float getInputCurrent(void);
 float getOutputCurrent(void);
 
-void vTaskLed1(void *parameter);
-void vTaskMeasureFreq(void *parameter);
-void vTaskMeasureADC(void *parameter);
-void vTaskMonitor(void *parameter);
+#endif
 
 void InitMainTick(void);
 void showBip(void);

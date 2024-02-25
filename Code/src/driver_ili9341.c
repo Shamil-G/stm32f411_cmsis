@@ -2,6 +2,10 @@
 #include "stdio.h"
 #include "fonts.h"
 
+#define USE_SPI
+
+#include "driver_ili9341.h"
+
 ST7735_Button button;
 ST7735_ProgressBar pbar;
 float    i_voltage, i_current;
@@ -10,7 +14,7 @@ uint32_t screen_ticks;
 
 extern uint32_t freq_ticks;
 extern uint32_t freqMeter;
-extern uint32_t adc_ticks;
+extern uint16_t adc_ticks;
 extern uint16_t encoder_ticks;
 extern uint16_t bounce_encoder;
 

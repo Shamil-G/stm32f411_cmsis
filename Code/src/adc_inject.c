@@ -6,35 +6,13 @@
  */
 
 #include "main.h"
+#include "adc-inject.h"
 #include "string.h"
 
+uint16_t adc_ticks;
 uint8_t lockGetValue;
-//#define ADC_16Bit
-
-#ifdef ADC_16Bit
-#define ADC_COEFF 65536
-#else
-#define ADC_COEFF 4096
-#endif
-
-#define reference_voltage 	3.31
-#define reference_shift 	0
-#define TARGET_VALUE 		1.5
-#define PRECISION_VALUE 	0.005
-#define TARGET_VALUE_MAX 	TARGET_VALUE + TARGET_VALUE * PRECISION_VALUE
-#define TARGET_VALUE_MIN 	TARGET_VALUE + TARGET_VALUE - PRECISION_VALUE
-#define FAULT_MAX_VALUE 	3
-#define FAULT_MIN_VALUE 	0.06
-#define MIN_INPUT_VOLTAGE 	0.5
-#define MAX_INPUT_VOLTAGE 	2.5
-#define MAX_CURRENT 		2.5
-#define FAULT_LOW 		getInputVoltage()<FAULT_MIN_VALUE
-#define FAULT_HIGHT 		result.output_fault>FAULT_MAX_VALUE
-#define CNT_FAULT 			20
-
 struct adc_result_buf adc_result_buf;
 
-volatile uint32_t adc_ticks;
 
 void ADCDown(ADC_TypeDef * Adc){
 	CLEAR_BIT(Adc->CR2, ADC_CR2_ADON);

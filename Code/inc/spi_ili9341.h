@@ -1,3 +1,4 @@
+#pragma once
 /*
  * spi_ili9341.h
  *
@@ -8,8 +9,6 @@
 #include "fonts.h"
 #include "color565.h"
 
-#ifndef INC_SPI_ILI9341_H_
-#define INC_SPI_ILI9341_H_
 // Size of LCD
 // here type lcd is ili9341 (st7735)
 extern uint16_t ili9341_WIDTH;
@@ -116,6 +115,7 @@ typedef struct
 	uint16_t progress;
 } ST7735_ProgressBar;
 //---------------------------------------------------------------------
+
 // Button Function
 void ili7735_Button_StructInit(ST7735_Button* btn,uint8_t x,uint8_t y,char* txt,uint8_t length, sFONT* font, uint16_t BackColor, uint16_t TextColor, uint16_t BorderColor, uint16_t OldBackgrounColor);
 void ili7735_Button_Draw(ST7735_Button* btn);
@@ -126,4 +126,3 @@ void ili7735_ProgressBar_Destroy(ST7735_ProgressBar* pb);
 void ili7735_ProgressBar_Init(ST7735_ProgressBar* pb,uint16_t x,uint16_t y, uint16_t w, uint16_t h, uint16_t ProgressColor, uint16_t BorderColor, uint16_t BackgroundColor);
 void ili7735_ProgressBar_SetProgress(ST7735_ProgressBar* pb, uint16_t progress);
 
-#endif
