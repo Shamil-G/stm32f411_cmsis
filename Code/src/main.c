@@ -69,7 +69,8 @@ int main(void){
 //		usart1_tx(buff_tx, sizeof(buff_tx), 100);
 		usart1_dma_tx(buff_tx, sizeof(buff_tx), 100);
 //	  	memset(buff_rx, 0, sizeof(buff_rx));
-//		usart1_dma_rx(buff_rx, sizeof(buff_tx), 100);
+		usart1_dma_rx(buff_rx, sizeof(buff_tx), 100);
+//		usart1_rx(buff_rx, sizeof(buff_tx), 100);
 #endif
 		Delay(100);
 		toggle_led1();
