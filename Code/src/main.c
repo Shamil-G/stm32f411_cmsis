@@ -53,7 +53,7 @@ int main(void){
 
 #ifdef USE_USART
   	uint8_t buff_rx[16]={'a','b','c','d','e','f','g','h','i','g','k'};
-  	uint8_t buff_tx[16]= {1,2,3,0,0,0,0,0,0,0,0,0,0,0,0};
+  	uint8_t buff_tx[16]= {8,7,6,5,4,3,2,1,0,1,2,3,4,5,6,7};
   	usart_init(USART1);
 #endif
 	enable_led1();
@@ -66,11 +66,12 @@ int main(void){
 		temper=SHT31_GetTemperature();
 #endif
 #ifdef USE_USART
+//		usart1_tx(buff_tx, sizeof(buff_tx), 100);
 		usart1_dma_tx(buff_tx, sizeof(buff_tx), 100);
-	  	memset(buff_rx, 0, sizeof(buff_tx));
-		usart1_dma_rx(buff_rx, sizeof(buff_tx), 100);
+//	  	memset(buff_rx, 0, sizeof(buff_rx));
+//		usart1_dma_rx(buff_rx, sizeof(buff_tx), 100);
 #endif
-		Delay(500);
+		Delay(100);
 		toggle_led1();
 //	  show_ili9341_monitor();
 	}

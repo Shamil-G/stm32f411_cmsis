@@ -111,8 +111,6 @@ void usart_init(USART_TypeDef* usart){
 	usart->CR3=0L;
 	// 0: 1 Start bit, 8 Data bits, n Stop bit
 	// CLEAR_BIT(USART1->CR1, USART1_CR1_M);
-	// ENABLED USART1
-	usart->CR1 |= USART_CR1_UE;
 
 #ifdef USE_USART_DMA
 	dma_usart1_init_();
@@ -120,10 +118,13 @@ void usart_init(USART_TypeDef* usart){
 #endif
 
 #ifndef USE_USART_DMA
-	usart->CR1 |= USART_CR1_TE | USART_CR1_RE;
 	// Прерывание по приему данных
 	usart->CR1 = USART_CR1_RXNEIE | USART_CR1_IDLEIE;
 #endif
+
+	usart->CR1 |= USART_CR1_TE | USART_CR1_RE;
+	// ENABLED USART1
+	usart->CR1 |= USART_CR1_UE;
 }
 //---------------------------------------------------------------------------
 uint8_t usart1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout){
@@ -151,13 +152,41 @@ uint8_t usart1_dma_tx(uint8_t * txData, uint16_t buff_size, uint32_t timeout){
 	// While Tx buffer not empty
 	while (!(USART1->SR & USART_SR_TXE) && (usart_ticks < timeout));
 
-	DMA2_Stream7->CR &= ~DMA_SxCR_EN;
-	while ((DMA2_Stream7->CR & DMA_SxCR_EN) && (usart_ticks < timeout));
+//	DMA2_Stream7->CR &= ~DMA_SxCR_EN;
+//	while ((DMA2_Stream7->CR & DMA_SxCR_EN) && (usart_ticks < timeout));
 
     DMA2_Stream7->M0AR = (uint32_t)txData;			// Set address buf
     DMA2_Stream7->NDTR = buff_size;					// Set len
 
     DMA2_Stream7->CR  |= DMA_SxCR_EN;				// Enable DMA
+
+#ifdef USE_DMA_IRQ
+	while(tx_ready==0 && usart_ticks < timeout_ms);
+	if( usart_ticks >= timeout_ms ) return 0;
+#endif
+
+	while ( (usart_ticks < timeout) && !READ_BIT(DMA2->HISR, DMA_HISR_TCIF7) );
+	while ( (usart_ticks < timeout) && !(USART1->SR & USART_SR_TC) );        //Wait transmit all data
+
+	DMA2->HIFCR |= DMA_HIFCR_CTCIF7;		//Clear DMA event
+	if (usart_ticks >= timeout)
+		usart_status = usart_ticks;
+	return usart_status;
+}
+uint8_t usart1_tx(uint8_t * txData, uint16_t buff_size, uint32_t timeout){
+	usart_ticks = 0;
+	usart_status = 0;
+	// While Tx buffer not empty
+	while (!(USART1->SR & USART_SR_TXE) && (usart_ticks < timeout));
+
+	for(uint8_t i=0; i<buff_size && usart_ticks < timeout;){
+		if(USART1->SR & USART_SR_TXE){
+			USART1->DR=*(txData+i);
+			i++;
+		}
+	}
+
+	while ( (usart_ticks < timeout) && !(USART1->SR & USART_SR_TC) );        //Wait transmit all data
 
 	if (usart_ticks >= timeout)
 		usart_status = usart_ticks;
