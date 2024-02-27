@@ -399,7 +399,12 @@ uint8_t i2c1_dma_tx(I2C_TypeDef* p_i2c, uint8_t addr_device, uint8_t* data, uint
 	while ( (i2c_ticks < timeout_ms) && !READ_BIT(DMA1->HISR, DMA_HISR_TCIF6) );
 	while ( (i2c_ticks < timeout_ms) && !(p_i2c->SR1 & I2C_SR1_BTF) );        //Wait transmit all data
 
-	DMA1->HIFCR |= DMA_HIFCR_CTCIF6;		//Clear DMA event
+	DMA1->HIFCR |= 	DMA_HIFCR_CTCIF6 | // clear transfer complete interrupt flag
+					DMA_HIFCR_CHTIF6 | // clear half transfer interrupt flag
+					DMA_HIFCR_CTEIF6 | // clear transfer error interrupt flag
+				 	DMA_HIFCR_CDMEIF6 | // clear direct mode error interrupt flag
+					DMA_HIFCR_CFEIF6;   // clear FIFO error interrupt flag
+
 //
 	p_i2c->CR1 |= I2C_CR1_STOP;				//Stop generation
 	CLEAR_BIT(p_i2c->SR1, I2C_SR1_AF);

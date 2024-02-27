@@ -52,8 +52,8 @@ int main(void){
 #endif
 
 #ifdef USE_USART
-  	uint8_t buff_rx[16]={'a','b','c','d','e','f','g','h','i','g','k'};
-  	uint8_t buff_tx[16]= {8,7,6,5,4,3,2,1,0,1,2,3,4,5,6,7};
+//  	uint8_t buff_rx[16]= {'a','b','c','d','e','f','g','h','i','g','k','l','m','n','o','p'};
+  	uint8_t buff_tx[16]= {'a','b','c','d','e','f','g','h','i','g','k','l','m','n','o','p'};
   	usart_init(USART1);
 #endif
 	enable_led1();
