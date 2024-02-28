@@ -48,6 +48,7 @@ void spi2_clear_flags(){
 }
 
 void spi_init(SPI_TypeDef *spi){
+  spi2_gpio_init();
   // Включаем SPI
   if(spi==SPI1)
     RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;

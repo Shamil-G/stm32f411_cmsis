@@ -4,7 +4,6 @@
 #define STM32F411
 
 #define USE_SYSTICK
-
 #define USE_USART
 #define USE_USART_DMA
 
@@ -16,7 +15,7 @@
 
 //#define USE_ADC
 
-#define USE_ENCODER
+//#define USE_ENCODER
 
 
 #include "stm32f4xx.h"

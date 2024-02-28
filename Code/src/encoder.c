@@ -1,4 +1,5 @@
 #include "main.h"
+#include "encoder.h"
 
 // Button IRQ for Encoder -> PB_3
 uint8_t lockEncoder;

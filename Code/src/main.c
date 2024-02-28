@@ -18,32 +18,37 @@ float humidity;
 float temper;
 extern uint8_t tx_ready;
 
+#ifdef USE_USART
+uint8_t buff_tx[16]= {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+uint8_t buff_rx[16]= {'a','b','c','d','e','f','g','h','i','g','k','l','m','n','o','p'};
+#endif
+
+
 int main(void){
       SystemUp();
 //      initRCC_F411();
 //      InitMainTick();
 #ifdef USE_SYSTICK
-      init_SysTick();
+	init_SysTick();
 #endif
-
 //      init_pwm(); 		// 17.02.2024
 #ifdef USE_ENCODER
-      EncoderOn();
+	EncoderOn();
 #endif
-
 //      change_pwm_mode(sinusFifty);
 
 #ifdef USE_SPI
-	spi2_gpio_init();
 	spi_init(SPI2);
 	dma_spi2_init();
 #endif
-
-//      ili9341_gpio_init();
-//      ili9341_init(240,320);
-//      ili9341_primary_tune();
-
-//	InitADC(); 			// 17.02.2024
+#ifdef USE_SCREEN
+	ili9341_gpio_init();
+	ili9341_init(240,320);
+	ili9341_primary_tune();
+#endif
+#ifdef USE_ADC
+	InitADC(); 			// 17.02.2024
+#endif
 //	meterPortOn();
 //	FreqMeterOn(); 		// 17.02.2024
 //	Phase3_InitHrpwm();
@@ -52,8 +57,6 @@ int main(void){
 #endif
 
 #ifdef USE_USART
-  	uint8_t buff_rx[16]= {'a','b','c','d','e','f','g','h','i','g','k','l','m','n','o','p'};
-  	uint8_t buff_tx[16]= {'a','b','c','d','e','f','g','h','i','g','k','l','m','n','o','p'};
   	usart_init(USART1);
 #endif
 	enable_led1();
@@ -67,9 +70,9 @@ int main(void){
 #endif
 #ifdef USE_USART
 //		usart1_tx(buff_tx, sizeof(buff_tx), 100);
-		usart1_dma_tx(buff_tx, sizeof(buff_tx), 100);
+		usart1_dma_tx(buff_tx, strlen(buff_rx), 100);
 //	  	memset(buff_rx, 0, sizeof(buff_rx));
-		usart1_dma_rx(buff_rx, sizeof(buff_tx), 100);
+		usart1_dma_rx(buff_rx, sizeof(buff_rx), 100);
 //		usart1_rx(buff_rx, sizeof(buff_tx), 100);
 #endif
 		Delay(100);
