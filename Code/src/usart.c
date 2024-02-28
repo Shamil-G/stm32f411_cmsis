@@ -128,11 +128,11 @@ void usart_init(USART_TypeDef* usart){
 }
 //---------------------------------------------------------------------------
 void usart1_callback_rx(){
-	if(usart_counter>=USART_SIZE_BUFFER){
+	if(usart_buff_pos>=USART_SIZE_BUFFER){
 		usart_rx_ovr++;
 		usart_buff_pos=0;
 	}
-	*(usart_buffer_rx+usart_buff_pos)=USART1->DR;
+	usart_buffer_rx[usart_buff_pos]=USART1->DR;
 	usart_counter++;
 	usart_buff_pos++;
 }
@@ -172,7 +172,7 @@ uint8_t usart1_rx(uint8_t * rxData, uint16_t buff_size, uint32_t timeout){
 	usart_buff_pos = 0;
 
 	while( (usart_ticks < timeout) && (USART1->SR & USART_SR_RXNE)) {
-		if(usart_counter>=USART_SIZE_BUFFER){
+		if(usart_buff_pos>=buff_size){
 			usart_rx_ovr++;
 			usart_buff_pos=0;
 		}
