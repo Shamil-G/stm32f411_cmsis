@@ -11,13 +11,12 @@
 #include "usart.h"
 
 volatile uint16_t usart_ticks;
-volatile uint16_t usart_buff_len;
 volatile uint16_t usart_counter=0;
 volatile uint8_t  usart_status;
-volatile uint8_t  usart_buf_len;;
 volatile uint8_t  usart_rx_ovr;
+volatile uint8_t  usart_buff_pos;
 
-volatile uint32_t usart_buffer_rx[USART_SIZE_BUFFER];
+volatile uint8_t  usart_buffer_rx[USART_SIZE_BUFFER];
 
 void usart1_gpio_init() {
 	InitGPio(USART1_TX_PORT,
@@ -129,8 +128,13 @@ void usart_init(USART_TypeDef* usart){
 }
 //---------------------------------------------------------------------------
 void usart1_callback_rx(){
-	uint8_t buff[16];
-	memcpy(buff, (void*)DMA2_Stream2->M0AR, sizeof(buff));
+	if(usart_counter>=USART_SIZE_BUFFER){
+		usart_rx_ovr++;
+		usart_buff_pos=0;
+	}
+	*(usart_buffer_rx+usart_buff_pos)=USART1->DR;
+	usart_counter++;
+	usart_buff_pos++;
 }
 uint8_t usart1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout){
 	usart_ticks = 0;
@@ -163,16 +167,18 @@ uint8_t usart1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout){
 uint8_t usart1_rx(uint8_t * rxData, uint16_t buff_size, uint32_t timeout){
 	usart_ticks = 0;
 	usart_status = 0;
-	uint8_t pos = 0;
+	usart_rx_ovr = 0;
+	usart_counter = 0;
+	usart_buff_pos = 0;
 
 	while( (usart_ticks < timeout) && (USART1->SR & USART_SR_RXNE)) {
 		if(usart_counter>=USART_SIZE_BUFFER){
 			usart_rx_ovr++;
-			pos=0;
+			usart_buff_pos=0;
 		}
-		*(rxData+pos)=USART1->DR;
+		*(rxData+usart_buff_pos)=USART1->DR;
 		usart_counter++;
-		pos++;
+		usart_buff_pos++;
 	}
 
 	if (usart_ticks >= timeout)
