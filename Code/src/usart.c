@@ -12,11 +12,10 @@
 
 volatile uint16_t usart_ticks;
 volatile uint16_t usart_buff_len;
-volatile uint16_t usart_counter;
+volatile uint16_t usart_counter=0;
 volatile uint8_t  usart_status;
-//volatile uint16_t usart_ticks;
-//volatile uint16_t usart_counter=0;
-//volatile uint8_t  usart_status;
+volatile uint8_t  usart_buf_len;;
+volatile uint8_t  usart_rx_ovr;
 
 volatile uint32_t usart_buffer_rx[USART_SIZE_BUFFER];
 
@@ -86,11 +85,6 @@ void dma_usart1_init_(){
 	NVIC_EnableIRQ(DMA2_Stream2_IRQn);
 //	NVIC_EnableIRQ(DMA2_Stream7_IRQn);
 #endif
-#ifndef USE_USART_DMA
-//	NVIC_EnableIRQ(USART1_IRQn);
-#endif
-	DMA2_Stream2->CR |= DMA_SxCR_EN;			// Enable Rx DMA
-    DMA2_Stream7->CR |= DMA_SxCR_EN;			// Enable Tx DMA
 }
 
 void usart_init(USART_TypeDef* usart){
@@ -123,10 +117,11 @@ void usart_init(USART_TypeDef* usart){
 	usart->CR3 |= USART_CR3_DMAT | USART_CR3_DMAR;
 #endif
 
-#ifndef USE_USART_DMA
+//#ifndef USE_USART_DMA
 	// Прерывание по приему данных
 	usart->CR1 = USART_CR1_RXNEIE | USART_CR1_IDLEIE;
-#endif
+//#endif
+	NVIC_EnableIRQ(USART1_IRQn);
 
 	usart->CR1 |= USART_CR1_TE | USART_CR1_RE;
 	// ENABLED USART1
@@ -143,15 +138,15 @@ uint8_t usart1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout){
 	// While Rx buffer not empty
 	while (!(USART1->SR & USART_SR_RXNE) && (usart_ticks < timeout));
 
-//	DMA2_Stream2->CR &= ~DMA_SxCR_EN;
-//	while ((DMA2_Stream2->CR & DMA_SxCR_EN) && (usart_ticks < timeout));
-
+	// При внесении адреса в DMA2_Stream2->M0AR 
+	// Или при изменении DMA2_Stream2->NDTR
+	// - USART сразу переходит в DMA DISABLE
 	DMA2_Stream2->M0AR = (uint32_t)rxData;			// Set address buf
 	DMA2_Stream2->NDTR = buff_size;					// Set len
 
 	DMA2_Stream2->CR |= DMA_SxCR_EN;				// Enable DMA
 	// Wait end of Receive or timeout
-    // With disabled DMA IRQ
+    	// With disabled DMA IRQ
 	while(!(DMA2->LISR & DMA_LISR_TCIF2) && (usart_ticks < timeout));
 
 	DMA2->LIFCR |= 	DMA_LIFCR_CTCIF2 | // clear transfer complete interrupt flag
@@ -164,53 +159,47 @@ uint8_t usart1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout){
 		usart_status = usart_ticks;
 	return usart_status;
 }
+//----------------------------------------------------------------------------
 uint8_t usart1_rx(uint8_t * rxData, uint16_t buff_size, uint32_t timeout){
 	usart_ticks = 0;
 	usart_status = 0;
+	uint8_t pos = 0;
 
-	for(uint8_t i=0; i<buff_size && usart_ticks < timeout;){
-		if(USART1->SR & USART_SR_RXNE){
-			*(rxData+i)=USART1->DR;
-			i++;
+	while( (usart_ticks < timeout) && (USART1->SR & USART_SR_RXNE)) {
+		if(usart_counter>=USART_SIZE_BUFFER){
+			usart_rx_ovr++;
+			pos=0;
 		}
+		*(rxData+pos)=USART1->DR;
+		usart_counter++;
+		pos++;
 	}
-    // Wait transmit all data
-	// while ( (usart_ticks < timeout) && !(USART1->SR & USART_SR_TC) );
 
 	if (usart_ticks >= timeout)
 		usart_status = usart_ticks;
 	return usart_status;
 }
-//----------------------------------------------------------------------------
 uint8_t usart1_dma_tx(uint8_t * txData, uint16_t buff_size, uint32_t timeout){
 	usart_ticks = 0;
 	usart_status = 0;
 	// While Tx buffer not empty
 	while (!(USART1->SR & USART_SR_TXE) && (usart_ticks < timeout));
 
-//	DMA2_Stream7->CR &= ~DMA_SxCR_EN;
-//	while ((DMA2_Stream7->CR & DMA_SxCR_EN) && (usart_ticks < timeout));
-
     DMA2_Stream7->M0AR = (uint32_t)txData;			// Set address buf
     DMA2_Stream7->NDTR = buff_size;					// Set len
-
+    // После передачи данных в канал, DMA автоматически становится DISABLE
     DMA2_Stream7->CR  |= DMA_SxCR_EN;				// Enable DMA
 
-    // Wait flag of complete data transfer
-    // With disabled DMA IRQ
 	while ( (usart_ticks < timeout) && !READ_BIT(DMA2->HISR, DMA_HISR_TCIF7) );
-	// Wait transmit all data
-	// while ( (usart_ticks < timeout) && !(USART1->SR & USART_SR_TC) );
-
+	while ( (usart_ticks < timeout) && !(USART1->SR & USART_SR_TC) );        //Wait transmit all data
+	// Flag interrupt clear register
 	DMA2->HIFCR |= 	DMA_HIFCR_CTCIF7 | // clear transfer complete interrupt flag
 					DMA_HIFCR_CHTIF7 | // clear half transfer interrupt flag
 					DMA_HIFCR_CTEIF7 | // clear transfer error interrupt flag
 				 	DMA_HIFCR_CDMEIF7 |// clear direct mode error interrupt flag
 					DMA_HIFCR_CFEIF7;  // clear FIFO error interrupt flag
-
-	if (usart_ticks >= timeout){
+	if (usart_ticks >= timeout)
 		usart_status = usart_ticks;
-	}
 	return usart_status;
 }
 uint8_t usart1_tx(uint8_t * txData, uint16_t buff_size, uint32_t timeout){
@@ -267,10 +256,9 @@ void DMA2_Stream7_IRQHandler(void)
 	{
 		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CTCIF7);
 	}
-	if(READ_BIT(DMA2->HISR, DMA_HISR_TEIF7) == (DMA_HISR_TEIF7))
+	if( DMA2->HISR & (DMA_HISR_TEIF7 | DMA_HISR_HTIF7 |
+		DMA_HISR_DMEIF7 | DMA_HISR_FEIF7) )
 	{
-		// Disable DMA channels
-		CLEAR_BIT(DMA2_Stream7->CR, DMA_SxCR_EN);
 		// Очищаем потенциальные прерывания
 		DMA2->HIFCR |= 	DMA_HIFCR_CHTIF7 | // Stream x clear half transfer interrupt flag
 						DMA_HIFCR_CTEIF7 | // Stream x clear transfer error interrupt flag
@@ -282,13 +270,12 @@ void DMA2_Stream7_IRQHandler(void)
 // Without DMA
 void USART1_IRQHandler(void) {
 	if (READ_BIT(USART1->SR, USART_SR_RXNE)) {
-		usart_buffer_rx[usart_counter] = USART1->DR;
-		usart_counter++;
+		usart_status = usart1_rx((uint8_t*)&usart_buffer_rx, sizeof(usart_buffer_rx), 10);
 	}
 	if (READ_BIT(USART1->SR, USART_SR_IDLE)) {
 		// Reset flag IDLE
 		USART1->DR;
-		usart_buff_len=usart_counter;
+		usart_status = usart_counter;
 		usart_counter = 0;
 	}
 }
