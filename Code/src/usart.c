@@ -16,6 +16,9 @@ volatile uint8_t  usart_status;
 volatile uint8_t  usart_rx_ovr;
 volatile uint8_t  usart_buff_pos;
 
+extern uint8_t buff_tx[16];
+extern uint8_t buff_rx[16];
+
 volatile uint8_t  usart_buffer_rx[USART_SIZE_BUFFER];
 
 void usart1_gpio_init() {
@@ -82,7 +85,7 @@ void dma_usart1_init_(){
 	// SET_BIT(DMA2_Stream2->CR, DMA_SxCR_PSIZE); // Размер данных в периферии. По умолчанию 8 бит
 #ifdef USE_USART_DMA
 	NVIC_EnableIRQ(DMA2_Stream2_IRQn);
-//	NVIC_EnableIRQ(DMA2_Stream7_IRQn);
+	NVIC_EnableIRQ(DMA2_Stream7_IRQn);
 #endif
 }
 
@@ -116,51 +119,39 @@ void usart_init(USART_TypeDef* usart){
 	usart->CR3 |= USART_CR3_DMAT | USART_CR3_DMAR;
 #endif
 
-//#ifndef USE_USART_DMA
+#ifndef USE_USART_DMA
 	// Прерывание по приему данных
 	usart->CR1 = USART_CR1_RXNEIE | USART_CR1_IDLEIE;
-//#endif
 	NVIC_EnableIRQ(USART1_IRQn);
-
+#endif
 	usart->CR1 |= USART_CR1_TE | USART_CR1_RE;
 	// ENABLED USART1
 	usart->CR1 |= USART_CR1_UE;
 }
 //---------------------------------------------------------------------------
 void usart1_callback_rx(){
-	if(usart_buff_pos>=USART_SIZE_BUFFER){
-		usart_rx_ovr++;
-		usart_buff_pos=0;
-	}
-	usart_buffer_rx[usart_buff_pos]=USART1->DR;
-	usart_counter++;
-	usart_buff_pos++;
+	memcpy(buff_tx, buff_rx, sizeof(buff_tx)-1 );
+	usart_rx_ovr=0;
 }
+// Запустим DMA USART, и на прерывании вызовем функцию: usart1_callback_rx
+// которая должна положить результат в нужное место
 uint8_t usart1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout){
 	usart_ticks = 0;
 	usart_status = 0;
 	// While Rx buffer not empty
 	while (!(USART1->SR & USART_SR_RXNE) && (usart_ticks < timeout));
+	if(USART1->SR & USART_SR_RXNE){
+		// При внесении адреса в DMA2_Stream2->M0AR
+		// Или при изменении DMA2_Stream2->NDTR
+		// - USART сразу переходит в DMA DISABLE
+		DMA2_Stream2->M0AR = (uint32_t)rxData;			// Set address buf
+		DMA2_Stream2->NDTR = buff_size;					// Set len
 
-	// При внесении адреса в DMA2_Stream2->M0AR 
-	// Или при изменении DMA2_Stream2->NDTR
-	// - USART сразу переходит в DMA DISABLE
-	DMA2_Stream2->M0AR = (uint32_t)rxData;			// Set address buf
-	DMA2_Stream2->NDTR = buff_size;					// Set len
+		DMA2_Stream2->CR |= DMA_SxCR_EN;				// Enable DMA
 
-	DMA2_Stream2->CR |= DMA_SxCR_EN;				// Enable DMA
-	// Wait end of Receive or timeout
-    	// With disabled DMA IRQ
-	while(!(DMA2->LISR & DMA_LISR_TCIF2) && (usart_ticks < timeout));
-
-	DMA2->LIFCR |= 	DMA_LIFCR_CTCIF2 | // clear transfer complete interrupt flag
-					DMA_LIFCR_CHTIF2 | // clear half transfer interrupt flag
-					DMA_LIFCR_CTEIF2 | // clear transfer error interrupt flag
-				 	DMA_LIFCR_CDMEIF2 | // clear direct mode error interrupt flag
-					DMA_LIFCR_CFEIF2;   // clear FIFO error interrupt flag
-
-	if (usart_ticks >= timeout)
-		usart_status = usart_ticks;
+		if (usart_ticks >= timeout)
+			usart_status = usart_ticks;
+	}
 	return usart_status;
 }
 //----------------------------------------------------------------------------
@@ -176,6 +167,8 @@ uint8_t usart1_rx(uint8_t * rxData, uint16_t buff_size, uint32_t timeout){
 			usart_rx_ovr++;
 			usart_buff_pos=0;
 		}
+		// После чтения USART1->DR
+		// Сбрасывается USART_SR_RXNE и USART_SR_IDLE
 		*(rxData+usart_buff_pos)=USART1->DR;
 		usart_counter++;
 		usart_buff_pos++;
@@ -237,19 +230,17 @@ void DMA2_Stream2_IRQHandler(void)
 	// Stream x RECEIVE complete interrupt flag - TCIF
 	if(READ_BIT(DMA2->LISR, DMA_LISR_TCIF2) == (DMA_LISR_TCIF2))
 	{
-//		USART1->CR3 &= USART_CR3_DMAR;
-		// Stream x clear transfer complete interrupt flag
 		// Writing 1 to this bit clears the corresponding
 		// TCIFx flag in the DMA_LISR register
 		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTCIF2);
-//		USART1->CR3 |= USART_CR3_DMAR;
 		usart1_callback_rx();
 	}
-	// Stream x transfer error interrupt flag - TEIF
-	if(READ_BIT(DMA2->LISR, DMA_LISR_TEIF2) == (DMA_LISR_TEIF2))
+	if( DMA2->LISR & ( DMA_LIFCR_CHTIF2 | // Передана половина данных/ Stream x clear half transfer interrupt flag
+			DMA_LIFCR_CTEIF2 | 	// Stream x clear transfer error interrupt flag
+			DMA_LIFCR_CDMEIF2| 	// Stream x clear direct mode error interrupt flag
+			DMA_LIFCR_CFEIF2 ) 	// Stream x clear FIFO error interrupt flag
+	  )
 	{
-		//Disable DMA channels
-		CLEAR_BIT(DMA2_Stream2->CR, DMA_SxCR_EN);
 		DMA2->LIFCR |=	DMA_LIFCR_CHTIF2 | // Stream x clear half transfer interrupt flag
 						DMA_LIFCR_CTEIF2 | // Stream x clear transfer error interrupt flag
 						DMA_LIFCR_CDMEIF2| // Stream x clear direct mode error interrupt flag
@@ -277,14 +268,10 @@ void DMA2_Stream7_IRQHandler(void)
 //----------------------------------------------------------
 // Without DMA
 void USART1_IRQHandler(void) {
-	if (READ_BIT(USART1->SR, USART_SR_RXNE)) {
-		usart_status = usart1_rx((uint8_t*)&usart_buffer_rx, sizeof(usart_buffer_rx), 10);
-	}
-	if (READ_BIT(USART1->SR, USART_SR_IDLE)) {
-		// Reset flag IDLE
-		USART1->DR;
-		usart_status = usart_counter;
-		usart_counter = 0;
-	}
+	// Так как чтение регистра SR сбрасывает его состояние
+	// то сразу вызываем функцию чтения данных
+	usart_status = usart1_rx((uint8_t*)&usart_buffer_rx, sizeof(usart_buffer_rx), 10);
+	usart_status = usart_counter;
+	usart_counter = 0;
 }
 
