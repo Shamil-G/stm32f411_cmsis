@@ -2,17 +2,14 @@
  * sht31.c
  *
  *  Created on: Sep 2, 2023
- *      Author: sguss
+ *  Author: Shamil Gusseynov
  */
+
 #include "main.h"
-#include "i2c.h"
+#include "sht31.h"
 
-extern uint32_t Delay_i2c;
-
-#define SHT31_command 0x240b
-
-uint8_t i2c_write(I2C_TypeDef* p_i2c, uint8_t addr_device, uint8_t* command, uint16_t, uint32_t);
-uint8_t i2c_read(I2C_TypeDef* p_i2c, uint8_t addr_device, uint8_t* data, uint16_t count, uint32_t timeout_ms);
+//uint8_t i2c_write(I2C_TypeDef* p_i2c, uint8_t addr_device, uint8_t* command, uint16_t, uint32_t);
+//uint8_t i2c_read(I2C_TypeDef* p_i2c, uint8_t addr_device, uint8_t* data, uint16_t count, uint32_t timeout_ms);
 
 
 struct SHT31_INFO{
@@ -35,10 +32,12 @@ uint8_t SHT31_CRC_8(uint8_t* data, int len) {
 }
 
 float SHT31_GetHumidity() {
-	return 100.0*(sht31.humidity_raw)/65535;
+	float res = 100.0*(sht31.humidity_raw)/65535;
+	return res;
 }
 float SHT31_GetTemperature() {
-	return 175.0*(sht31.temperature_raw)/65535 - 45;
+	float res = 175.0*(sht31.temperature_raw)/65535 - 45;
+	return res;
 }
 
 uint16_t SHT31_GetHumidity_raw() {
@@ -54,7 +53,8 @@ uint8_t sht31_request(I2C_TypeDef* p_i2c, uint8_t addr_device, uint32_t timeout_
 	uint8_t buffer[6];
 
 	//	Отправим команду на чтение
-	status = i2c_write(p_i2c, addr_device, command, sizeof(command), timeout_ms);
+//	status = i2c_write(p_i2c, addr_device, command, sizeof(command), timeout_ms);
+	status = i2c1_dma_tx(p_i2c, addr_device, command, sizeof(command), timeout_ms);
 	if(status)
 	{
 //		Delay(timeout_ms);
@@ -65,7 +65,8 @@ uint8_t sht31_request(I2C_TypeDef* p_i2c, uint8_t addr_device, uint32_t timeout_
 			//	Задержка для измерения
 			Delay(20);
 			// Read Result
-			status = i2c_read(p_i2c, addr_device, buffer, 6, timeout_ms);
+//			status = i2c_read(p_i2c, addr_device, buffer, 6, timeout_ms);
+			status = i2c1_dma_rx(p_i2c, addr_device, buffer, 6, timeout_ms);
 
 			if(status){
 				if(buffer[2] != SHT31_CRC_8(&buffer[0], 2)) {

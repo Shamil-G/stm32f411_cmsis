@@ -1,4 +1,13 @@
+/*
+ *  Author: Shamil Gusseynov
+ */
+
+#include "main.h"
+
 #include "tim1.h"
+#include "tim2.h"
+#include "adc-inject.h"
+#include "encoder.h"
 
 ModePWM  curr_mode_pwm=freeMode;
 
@@ -7,7 +16,7 @@ uint8_t lockTim1;
 //
 // В процентах заполнение меандра положительным сигналом
 // % = currDutyTim1/10
-uint16_t  currDutyTim1;
+volatile uint16_t  currDutyTim1;
 // Номер выбранной частоты в списке Tim1_listFreqPWMPSC
 uint8_t  Tim1_posFreqPWM;
 // Список формируемых частот
@@ -189,7 +198,7 @@ void tim1_init(){
   RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
   TIM1->PSC=PWM_PSC;
   lockTim1 = 0;
-  Tim1_posFreqPWM=13;
+  Tim1_posFreqPWM=14;
   currDutyTim1 = 100;
   curr_mode_pwm=freeMode;
 

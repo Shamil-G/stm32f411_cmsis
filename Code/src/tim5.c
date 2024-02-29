@@ -1,8 +1,13 @@
-#include "main.h"
-#include "led.h"
+/*
+ *  Author: Shamil Gusseynov
+ */
 
-extern uint32_t freq_meter_ticks;
-extern uint32_t freqMeter;
+#include "main.h"
+
+#include "tim5.h"
+
+extern volatile uint32_t freq_meter_ticks;
+extern volatile uint32_t freqMeter;
 
 //void TIM5_IRQHandler(void){
 //	TIM5->SR &= ~TIM_SR_UIF;

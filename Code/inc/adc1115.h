@@ -1,12 +1,10 @@
+#pragma once
 /*
  * ads115.h
  *
- *  Created on: Sep 18, 2023
- *      Author: sguss
- */
-
-#ifndef INC_ADS1115_H_
-#define INC_ADS1115_H_
+ * Created on: Sep 18, 2023
+ * Author: Shamil Gusseynov
+*/
 
 
 #define ADDR_ADS1115_GND	0x48
@@ -91,5 +89,3 @@
 #define TIMEOUT_SPS_860	1000/860
 
 #define DISABLE_COMPARATOR 0x0003
-
-#endif /* INC_ADS115_H_ */

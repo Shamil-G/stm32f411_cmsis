@@ -1,4 +1,9 @@
+/*
+ *  Author: Shamil Gusseynov
+ */
+
 #include "main.h"
+#include "spi.h"
 
 //#define SPI_MOSI_Port	GPIOB
 //#define SPI_MOSI_Pin	15
@@ -8,11 +13,21 @@
 //#define SPI_MISO_Pin	14
 
 #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
-#define dmaStreamTx DMA1_Stream4
-#define dma4spi	    DMA1
 #define READY_DATA_REGISTR 	(SPI2->SR & SPI_SR_TXE)
 
-extern unsigned long durationMs;
+uint32_t rx_buf=0UL;
+uint16_t spi_ticks=0;
+uint8_t	 spi_status;
+
+void spi2_clear_rx(){
+	if(	SPI2->SR & SPI_SR_OVR ||
+		SPI2->SR & SPI_SR_RXNE
+	) {
+		rx_buf = 0;
+		rx_buf = SPI2->DR;
+		rx_buf = SPI2->SR;
+	}
+}
 
 void spi2_gpio_init(){
 	  // SCK
@@ -27,8 +42,17 @@ void spi2_gpio_init(){
 	  InitGPio( SPI_NSS_Port, SPI_NSS_Pin, alternateF, push_pull, high, noPull, af5);
 	#endif
 }
+void spi2_clear_flags(){
+  // For SPI2 Tx
+  DMA1->HIFCR |=  DMA_HIFCR_CTCIF4 |
+		  	  	  DMA_HIFCR_CHTIF4 | // Stream x clear half transfer interrupt flag
+				  DMA_HIFCR_CTEIF4 | // Stream x clear transfer error interrupt flag
+				  DMA_HIFCR_CDMEIF4| // Stream x clear direct mode error interrupt flag
+				  DMA_HIFCR_CFEIF4;  // Stream x clear FIFO error interrupt flag
+}
 
 void spi_init(SPI_TypeDef *spi){
+  spi2_gpio_init();
   // Включаем SPI
   if(spi==SPI1)
     RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
@@ -46,84 +70,100 @@ void spi_init(SPI_TypeDef *spi){
 //	SPI_CR1_CPHA	| //1: Second edge is  is the MSBit capture strobe
 	SPI_CR1_SSM 	| // 1: NSS Software slave management enabled
 	SPI_CR1_SSI 	| // SSI: Internal slave select
-	// 0: SPI_CR1_BR_х - означает деление на 2 для f411 серии
-	// При использовании SPI2 на APB1ENR это означает 50MHz
-	// Baud rate (SPI_CR1_BR_2 | SPI_CR1_BR_1) = Fpclk/128 -> 400KHz
-	// Baud rate (SPI_CR1_BR_2 | SPI_CR1_BR_0) = Fpclk/64  -> 800KHz
-	// Baud rate (SPI_CR1_BR_2) = Fpclk/32  -> 1.6MHz
-//	SPI_CR1_BR_2 |
-//	SPI_CR1_BR_1 |
+//	SPI_CR1_BR		| // 50/2=25 MHz - default
+	//	SPI_CR1_BR_1 | // // 50/4=12,5 MHz - default
 	SPI_CR1_MSTR; // Master Configuration
 
-  // Включаем SPI
+// Включаем SPI
+//Port SPI2 have to use DMA
+#ifdef USE_SPI_DMA
+  spi->CR2 |= SPI_CR2_TXDMAEN;
+#endif
   spi->CR1 |= SPI_CR1_SPE;
-//#ifndef USE_DMA
+#ifndef USE_SPI_DMA
   NVIC_EnableIRQ(SPI2_IRQn);
-//#endif
+#endif
 }
 
 void dma_spi2_init(){
   dma_init(DMA1, DMA1_Stream4);  // SPI DMA Tx
+
   DMA1_Stream4->CR &= ~DMA_SxCR_CHSEL_Msk; // Выбор 0 канала
 
-  //Port SPI2 have to use DMA
-  SPI2->CR2 |= SPI_CR2_TXDMAEN;
-  // По умолчанию стоит 1 байт, тем не менее поставим 1 байт
-  dmaStreamTx->CR &= 	~DMA_SxCR_PINC |   // Peripheral address pointer is fixed 
+  DMA1_Stream4->CR &= ~DMA_SxCR_PINC |   // Peripheral address pointer is fixed
 	  		~DMA_SxCR_CIRC |   // Circular mode disabled
 	  		~DMA_SxCR_MSIZE |  // Memory data size = 8bit 
-	  		~DMA_SxCR_PSIZE;   // Peripheral data size
+	  		~DMA_SxCR_PSIZE;   // Peripheral data size = 8bit
+
+//  DMA1_Stream4->CR |= DMA_SxCR_PSIZE_0; // Peripheral data size
 
   // Установим адрес порта SPI2 куда DMA будет перекладывать данные
   DMA1_Stream4->PAR = (uint32_t)&SPI2->DR;
+//  DMA1_Stream4->FCR = 0x21L;
 
-  NVIC_EnableIRQ(DMA1_Stream4_IRQn);
+//  NVIC_EnableIRQ(DMA1_Stream3_IRQn);  // Rx
+  NVIC_EnableIRQ(DMA1_Stream4_IRQn);  // Tx
 }
 
-void spi2_dma_tx(uint8_t *data, uint32_t len){
-  // Очищаем потенциальные прерывания, иначе не запустится
+uint8_t spi2_dma_tx(uint8_t *data, uint16_t len, uint32_t Timeout){
+  spi_ticks=0;
+  spi_status=1;
+  // Отключаем DMA канал
   DMA1_Stream4->CR &= ~DMA_SxCR_EN;
-  while(DMA1_Stream4->CR & DMA_SxCR_EN);
+  while( (DMA1_Stream4->CR & DMA_SxCR_EN) && (spi_ticks<Timeout) );
+  // While Tx buffer not empty
+  while(!(SPI2->SR & SPI_SR_TXE) && (spi_ticks<Timeout) );
+  // while SPI not busy
+  while((SPI2->SR & SPI_SR_BSY) && (spi_ticks<Timeout));
 
-  DMA1_Stream4->CR |= 	DMA_SxCR_DIR_0 |   // Направление данных из памяти в периферию
-			DMA_SxCR_MINC;     // Инкремент памяти включен
+//  spi2_clear_flags();	// Clear in HISR registr
+
   // Заносим адрес памяти откуда мы будем передавать данные
   DMA1_Stream4->M0AR = (uint32_t)data;
-  // Количество передаваемых данных
+
+  // Start Tx
+  DMA1_Stream4->CR |= DMA_SxCR_DIR_0 |   // Направление данных из памяти в периферию
+					  DMA_SxCR_MINC;     // Инкремент памяти включен
+
   DMA1_Stream4->NDTR = len;
-  // Start Tranceive
+
+  // Количество передаваемых данных
   DMA1_Stream4->CR |= DMA_SxCR_EN;
+  if(spi_ticks<Timeout)
+		spi_status=0;
+  return spi_status;
 }
 
-/*
-void dma_reinit(SPI_TypeDef *spi){
-  // Подождем окончания передачи данных
-  if ( MstSpiDmaStreamTX->CR & DMA_SxCR_EN ){
-      MstSpiDmaStreamTX->CR  &= ~DMA_SxCR_EN; //Отключаем DMA, если оно включено
-      while(MstSpiDmaStreamTX->CR & DMA_SxCR_EN);
-  }
 
-  // Загружаем адрес периферийного регистра SPI - куда мы будем писать
-  // Это потом выставим в битах DIR
-  MstSpiDmaStreamTX->PAR = (uint32_t)(&spi->DR);
+uint8_t spi2_tx(uint8_t* pData, uint16_t Size, uint32_t Timeout){
 
-  //Настройка канала DMA
-  MstSpiDmaStreamTX->CR &= 	~DMA_SxCR_PL |    // приоритет низкий
-  				~DMA_SxCR_MSIZE | // разрядность данных в памяти 8 бит
-	  			~DMA_SxCR_PSIZE | // Peripheral address pointer is fixed
-      				~DMA_SxCR_PINC  | // Инкремент адреса периферии отключен
-	  			~DMA_SxCR_CIRC    // //кольцевой режим отключен
+	// While Tx buffer not empty
+    spi_ticks=0;
+    spi_status=1;
+	while(!(SPI2->SR & SPI_SR_TXE) && spi_ticks<Timeout);
 
-    MstSpiDmaStreamTX->CR |=  	DMA_SxCR_PSIZE_0 | // разрядность регистра данных SPI 16 бит
-    				DMA_SxCR_MINC;     //Включить инкремент адреса памяти
-  
-  //Передача данных из памяти в периферию
-  MstSpiDmaStreamTX->CR &=  ~DMA_SxCR_DIR;
-  MstSpiDmaStreamTX->CR |=  DMA_SxCR_DIR_0;
+    // Clear in HISR registr
+	while (Size > 0U && spi_ticks<Timeout)
+	{
+		if(	SPI2->SR & SPI_SR_OVR ||
+			SPI2->SR & SPI_SR_RXNE
+		) {
+			rx_buf = SPI2->DR;
+			rx_buf = SPI2->SR;
+		}
+		if(SPI2->SR & SPI_SR_TXE)  // Ожидаем флага TXE - что регистр DR готов для приема данных
+		{
+		  *((__IO uint8_t *)&SPI2->DR) = (*pData);
+		  pData += sizeof(uint8_t);
+		  Size--;
+		}
+	}
+	if(spi_ticks<Timeout)
+		spi_status=0;
+	return spi_status;
 }
-//*/
 
-uint8_t SPI2_WriteData(uint8_t* pData, uint32_t Size, uint32_t Timeout)
+uint8_t SPI2_WriteData(uint8_t* pData, uint16_t Size, uint32_t Timeout)
 {
 //	#if (USE_SPI_CRC != 0U)
 //	  /* Reset CRC Calculation */
@@ -133,33 +173,15 @@ uint8_t SPI2_WriteData(uint8_t* pData, uint32_t Size, uint32_t Timeout)
 //	  }
 //	#endif /* USE_SPI_CRC */
 
-#ifdef USE_DMA
-  spi2_dma_tx(pData, Size);
+#ifdef USE_SPI_DMA
+	spi_status = spi2_dma_tx(pData, Size, Timeout);
 #endif
-#ifndef USE_DMA
-  uint32_t ticks=0;
-  while (Size > 0U)
-  {
-	if (READY_DATA_REGISTR)  // Ожидаем флага TXE - что регистр DR готов для приема данных
-	{
-	  *((__IO uint8_t *)&SPI2->DR) = (*pData);
-	  pData += sizeof(uint8_t);
-	  Size--;
-	  ticks=0;
-	}
-	else
-	{
-	Delay(1);
-
-	if(ticks++ > Timeout)
-	  // Timeout management
-//	      if ( durationMs >=  Timeout )
-	  {
-		return ERROR_TIMEOUT;
-	  }
-	}
-  }
+#ifndef	USE_SPI_DMA
+	spi_status = spi2_tx(pData, Size, Timeout);
 #endif
+//	spi_status = spi2_dma_tx_2(pData, Size);
+//	status = spi2_dma_tx_2(&bb, 16);
+//	spi_status = spi2_dma_tx_3(pData, Size, Timeout);
 
 //	#if (USE_SPI_CRC != 0U)
 //	  /* Enable CRC Transmission */
@@ -173,40 +195,42 @@ uint8_t SPI2_WriteData(uint8_t* pData, uint32_t Size, uint32_t Timeout)
 	  //*
 //	  if (HSPI.Init.Direction == SPI_DIRECTION_2LINES)
 //	  {
-#ifdef  SPI_CLEAR_OVRFLAG
-  spi2_clear_ovrflag();
-#endif
+
+
 //	  }
 	//*/
-  return 0;
+//	  spi2_clear_rx();
+  return spi_status;
 }
 
 // SPI2_TX -> DMA1, Channel 0, Stream 4
 void DMA1_Stream4_IRQHandler(void)
 {
+  // Необходимо прочитать флаг SPI2->SR &  SPI2_SR_OVR
   if( READ_BIT(DMA1->HISR, DMA_HISR_TCIF4) != 0 )
   {
     //Clear Channel 4 interrupt flag
     DMA1->HIFCR |= DMA_HIFCR_CTCIF4;
-    // While Tx buffer not empty
-    while(!(SPI2->SR & SPI2_TXE));
-    // while SPI not busy
-    while(SPI2->SR & SPI2_BSY);
-    __NOP();  
+    // Clear SPI_SR_OVR
+    if(SPI2->SR & SPI_SR_OVR){
+		rx_buf = 0;
+		rx_buf = SPI2->DR;
+		rx_buf = SPI2->SR;    }
   }
-  else{
-	DMA1_Stream4->CR &= ~DMA_SxCR_EN;
+  if(DMA1->HISR & (DMA_HISR_HTIF4 | // Stream x clear half transfer interrupt flag
+			DMA_HISR_TEIF4 | // Stream x clear transfer error interrupt flag
+			DMA_HISR_DMEIF4| // Stream x clear direct mode error interrupt flag
+			DMA_HISR_FEIF4) )
+  {
 	DMA1->HIFCR |= 	DMA_HIFCR_CHTIF4 | // Stream x clear half transfer interrupt flag
 			DMA_HIFCR_CTEIF4 | // Stream x clear transfer error interrupt flag
 			DMA_HIFCR_CDMEIF4| // Stream x clear direct mode error interrupt flag
 			DMA_HIFCR_CFEIF4;  // Stream x clear FIFO error interrupt flag
-	// Необходимо прочитать флаг SPI2->SR &  SPI2_SR_OVR
-	if(SPI2->SR & SPI2_SR_OVR)
-  		spi2_clear_ovrflag();
-      __NOP();
   }
 }
+
 
 void SPI2_IRQHandler(void){
     __NOP();
 }
+

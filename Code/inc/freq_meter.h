@@ -1,10 +1,22 @@
 #pragma once
+/*
+ * Author: Shamil Gusseynov
+*/
+extern uint16_t currDutyTim;
 
-#ifndef __FREQ_METER__
-#define __FREQ_METER__
+extern volatile uint32_t  freq_meter_ticks; // Для EXTI1_IRQHandler() - считает по входящим на порт
+extern volatile uint32_t  freqMeter;
+extern volatile uint16_t  currDutyTim1;
 
-volatile uint32_t freq_meter_ticks = 0; // Для EXTI1_IRQHandler() - считает по входящим на порт
-volatile uint32_t freqMeter = 0;
+uint32_t getFreqPWM(void);
+void  FreqMeterOn(void);
+float getFreqDuty(void);
+inline uint32_t getFreqMeter(void){
+  return freqMeter;
+//			(CPU_CLOCK/listFreqPWMPSC[posFreqPWM]);
+};
 
-
-#endif
+// Freq Meter Section
+#define FreqMeterGPIO GPIOA
+#define FreqMeterPin  1
+#define FreqMeterAF   af2

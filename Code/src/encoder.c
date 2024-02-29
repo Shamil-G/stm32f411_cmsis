@@ -1,10 +1,18 @@
+/*
+ *  Author: Shamil Gusseynov
+ */
+
 #include "main.h"
+#include "encoder.h"
 
 // Button IRQ for Encoder -> PB_3
+SELECT_TIMER selected_timer=TIMER2;
+
 uint8_t lockEncoder;
 
-extern uint32_t encoder_ticks;
-uint32_t bounce_encoder;
+uint16_t bounce_encoder;
+uint16_t encoder_ticks;
+
 extern void pwm_tune();
 
 #define bounceButton 1000

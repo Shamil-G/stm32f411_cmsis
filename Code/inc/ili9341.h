@@ -1,5 +1,7 @@
 #pragma once
-
+/*
+ * Author: Shamil Gusseynov
+*/
 #define  ILI9341_LCD_PIXEL_WIDTH    ((uint16_t)320)
 #define  ILI9341_LCD_PIXEL_HEIGHT   ((uint16_t)240)
 

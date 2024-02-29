@@ -1,13 +1,48 @@
 #pragma once
+/*
+ * Author: Shamil Gusseynov
+*/
+#include "main.h"
 
-#include "gpio.h"
+#define USE_I2C_DMA
+
+#ifdef USE_I2C_DMA
+	// STM32F411, Page 170 of RM0383:
+	// I2C1: DMA1
+	// Channel_0
+	// Tx: DMA1_Stream1_IRQn
+	// Channel_1
+	// Rx: DMA1_Stream0_IRQn, DMA1_Stream5_IRQn
+	// Tx: DMA1_Stream6_IRQn, DMA1_Stream7_IRQn
+
+	// I2C2: DMA1
+	// Channel_7
+	// Rx: DMA1_Stream2_IRQn, DMA1_Stream3_IRQn
+	// Tx: DMA1_Stream7_IRQn
+
+	// I2C3: DMA1
+	// Channel_1
+	// Rx: DMA1_Stream1_IRQn
+	// Channel_3
+	// Rx: DMA1_Stream2_IRQn
+	// Tx: DMA1_Stream4_IRQn
+	// Channel_6
+	// Tx: DMA1_Stream5_IRQn
+
+	void dma_i2c_init();
+	uint8_t i2c1_dma_tx(I2C_TypeDef* p_i2c, uint8_t addr, uint8_t* data, uint16_t len, uint32_t timeout_ms);
+	uint8_t i2c1_dma_rx(I2C_TypeDef* p_i2c, uint8_t addr, uint8_t* data, uint16_t len, uint32_t timeout_ms);
+
+#endif
 
 uint8_t i2c_call_device(I2C_TypeDef * p_i2c, int8_t addr_device, uint8_t mode, uint32_t timeout_ms);
+void init_i2c(I2C_TypeDef * p_i2c);
+void dma_i2c1_init();
+
 
 #define START_I2C1_TRANSMIT I2C1->CR1 |= I2C_CR1_START
 #define STOP_I2C1_TRANSMIT  I2C1->CR1 &= ~I2C_CR1_STOP
 
-#define SHT31_ADDR 0x44
 #define I2C_READ  1
 #define I2C_WRITE 0
 

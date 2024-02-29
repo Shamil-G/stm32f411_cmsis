@@ -1,4 +1,11 @@
+/*
+ *  Author: Shamil Gusseynov
+ */
+
 #include "main.h"
+
+#include "tim2.h"
+#include "encoder.h"
 
 #define DEAD_TIME 1
 // PWM out port: GPIOB 3
@@ -109,7 +116,7 @@ void init_pwm(void)
 	WRITE_REG(PWMSingleTimer->PSC, 1 - 1);
 
 	lockTim = 0;
-	posFreqPWM=13;
+	posFreqPWM=18;
 	currDutyTim = 200; // 20%
 	freq_tune();
 //	PWMSingleTimerCCR = PWMSingleTimer->ARR/currDuty;		// 10% - Коэффициент заполнения

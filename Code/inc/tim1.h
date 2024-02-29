@@ -1,7 +1,7 @@
 #pragma once
-
-#include "main.h"
-
+/*
+ * Author: Shamil Gusseynov
+*/
 #define __TIMER TIM1
 #define T1_FIRST_COUNTER  TIM1->CCR1
 #define T1_SECOND_COUNTER TIM1->CCR2
@@ -28,22 +28,39 @@
 
 #define TIM1_BKIN_Port GPIOA
 #define TIM1_BKIN_Pin  6
-#define TIM1_BKIN_AF    af1
+#define TIM1_BKIN_AF   af1
 
 #define TIM1_ETR_Port  GPIOA
 #define TIM1_ETR_Pin   12
-#define TIM1_CH3_AF   af1
+#define TIM1_CH3_AF    af1
 
 #define TIM1_CH1N_Port GPIOA
 #define TIM1_CH1N_Pin  7
-#define TIM1_CH1N_AF  af1
+#define TIM1_CH1N_AF   af1
 
 #define TIM1_CH2N_Port GPIOB
 #define TIM1_CH2N_Pin  0
-#define TIM1_CH2N_AF  af1
+#define TIM1_CH2N_AF   af1
 
 #define TIM1_CH3N_Port GPIOB
 #define TIM1_CH3N_Pin  1
-#define TIM1_CH2N_AF  af1
+#define TIM1_CH2N_AF   af1
 
 #define SET_CH1_DUTY(value) (TIM1->CCR1=(int)value)
+
+
+void tim1_gpio_init(void);
+void tim1_init(void);
+
+void pwm2_tim1_up();
+void pwm2_tim1_down();
+void tim1_freqUp();
+void tim1_freqDown();
+
+uint32_t getFreqPWM(void);
+
+typedef enum {
+  freeMode = 0,
+  sinusFifty
+} ModePWM;
+

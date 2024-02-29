@@ -1,4 +1,10 @@
+/*
+ *  Author: Shamil Gusseynov
+ */
+
 #include "main.h"
+
+#include "signal.h"
 
 void showSOS(){
 	for(uint8_t i=0; i<3; i++){

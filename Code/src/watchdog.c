@@ -1,6 +1,9 @@
+/*
+ *  Author: Shamil Gusseynov
+ */
+
 #include "main.h"
 #include "watchdog.h"
-
 
 uint8_t init_watchdog(uint16_t counter){
 	uint32_t status=0UL;

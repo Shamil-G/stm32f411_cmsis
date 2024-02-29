@@ -1,3 +1,7 @@
+/*
+ *  *  Author: Shamil Gusseynov
+ */
+
 #include "main.h"
 
 #if defined(USER_VECT_TAB_ADDRESS)
