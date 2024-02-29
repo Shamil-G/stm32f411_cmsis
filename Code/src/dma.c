@@ -18,7 +18,7 @@ void dma_init(DMA_TypeDef * dma, DMA_Stream_TypeDef *dma_channel){
   // Прерывание, на которые будем реагировать
   dma_channel->CR |=
 		  	  	  	DMA_SxCR_TCIE | // Прерывание: Передача данных завершена
-//		  	  	  	DMA_SxCR_HTIE | // Прерывание: Разрешение прерывания половинной передачи
+//		  	  	  	DMA_SxCR_HTIE | // Разрешение прерывания, когда передана только половина данных
 		      	  	DMA_SxCR_TEIE | // Прерывание: Передача c ошибкой
 					DMA_SxCR_DMEIE	// Direct mode error interrupt enable
 					;

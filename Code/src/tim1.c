@@ -1,4 +1,9 @@
+#include "main.h"
+
 #include "tim1.h"
+#include "tim2.h"
+#include "adc-inject.h"
+#include "encoder.h"
 
 ModePWM  curr_mode_pwm=freeMode;
 

@@ -34,6 +34,9 @@
 #endif
 
 uint8_t i2c_call_device(I2C_TypeDef * p_i2c, int8_t addr_device, uint8_t mode, uint32_t timeout_ms);
+void init_i2c(I2C_TypeDef * p_i2c);
+void dma_i2c1_init();
+
 
 #define START_I2C1_TRANSMIT I2C1->CR1 |= I2C_CR1_START
 #define STOP_I2C1_TRANSMIT  I2C1->CR1 &= ~I2C_CR1_STOP

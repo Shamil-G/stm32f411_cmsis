@@ -5,9 +5,11 @@
 
 extern uint16_t currDutyTim;
 
-extern volatile uint32_t freq_meter_ticks; // Для EXTI1_IRQHandler() - считает по входящим на порт
-extern volatile uint32_t freqMeter;
+extern volatile uint32_t  freq_meter_ticks; // Для EXTI1_IRQHandler() - считает по входящим на порт
+extern volatile uint32_t  freqMeter;
+extern volatile uint16_t  currDutyTim1;
 
+uint32_t getFreqPWM(void);
 void  FreqMeterOn(void);
 float getFreqDuty(void);
 inline uint32_t getFreqMeter(void){

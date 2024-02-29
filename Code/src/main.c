@@ -3,7 +3,7 @@
 #include "string.h"
 
 int monitorStarted=0;
-SELECT_TIMER selected_timer=TIMER2;
+
 void toggle_led1(void);
 void enable_led1(void);
 //void meterPortOn();
@@ -81,29 +81,45 @@ int main(void){
 }
 
 void pwm_up(void){
+#ifdef USE_TIM2
   if(selected_timer==TIMER2)
     pwm_tim2_up();
+#endif
+#ifdef USE_TIM1
   if(selected_timer==TIMER1)
     pwm2_tim1_up(TIM1->ARR/20);
+#endif
 }
 
 void pwm_down(void){
+#ifdef USE_TIM2
   if(selected_timer==TIMER2)
     pwm_tim2_down();
+#endif
+#ifdef USE_TIM1
   if(selected_timer==TIMER1)
     pwm2_tim1_down(TIM1->ARR/20);
+#endif
 }
 
 void freqUp(void){
+#ifdef USE_TIM2
   if(selected_timer==TIMER2)
     tim2_freqUp();
+#endif
+#ifdef USE_TIM1
   if(selected_timer==TIMER1)
     tim1_freqUp();
+#endif
 }
 
 void freqDown(void){
+#ifdef USE_TIM2
   if(selected_timer==TIMER2)
     tim2_freqDown();
+#endif
+#ifdef USE_TIM1
   if(selected_timer==TIMER1)
     tim1_freqDown();
+#endif
 }

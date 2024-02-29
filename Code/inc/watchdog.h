@@ -1,3 +1,5 @@
+#pragma once
+
 #define PRESCALE_4 0x00000000
 #define PRESCALE_8 0x00000001
 #define PRESCALE_16 0x00000010

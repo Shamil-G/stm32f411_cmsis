@@ -1,5 +1,6 @@
 #include "main.h"
-#include "led.h"
+
+#include "tim5.h"
 
 extern volatile uint32_t freq_meter_ticks;
 extern volatile uint32_t freqMeter;

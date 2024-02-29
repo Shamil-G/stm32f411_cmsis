@@ -71,6 +71,7 @@ void ili9341_String(uint16_t x,uint16_t y, char *str);
 void ili9341_DrawRect(uint16_t color, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 uint16_t ili9341_RandColor(void);
 void ili9341_SetRotation(uint8_t r);
+extern uint32_t mainTick;
 // I think here place have mistake
 __STATIC_INLINE void DelayMicro(uint32_t __IO micros)
 {

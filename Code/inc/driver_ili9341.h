@@ -1,7 +1,6 @@
 #pragma once
 
 //#include "stm32f4xx.h"
-#ifdef USE_SPI
 
 #include "spi_ili9341.h"
 
@@ -25,4 +24,4 @@ void spi_end_send(SPI_TypeDef *spi);
 
 #define getRandomNumber	(mainTick && 0x0000ffff)
 
-#endif
+

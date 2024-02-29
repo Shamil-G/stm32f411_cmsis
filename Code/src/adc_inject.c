@@ -8,6 +8,7 @@
 #include "main.h"
 #include "adc-inject.h"
 #include "string.h"
+#include "signals.h"
 
 uint16_t adc_ticks;
 uint8_t lockGetValue;

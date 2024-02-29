@@ -2,10 +2,12 @@
 #include "stdio.h"
 #include "fonts.h"
 
-#define USE_SPI
+//#define USE_SPI
 
 #include "driver_ili9341.h"
 #include "freq_meter.h"
+#include "adc-inject.h"
+#include "encoder.h"
 
 ST7735_Button button;
 ST7735_ProgressBar pbar;

@@ -2,6 +2,8 @@
 #include "encoder.h"
 
 // Button IRQ for Encoder -> PB_3
+SELECT_TIMER selected_timer=TIMER2;
+
 uint8_t lockEncoder;
 
 uint16_t bounce_encoder;

@@ -133,7 +133,7 @@ void usart1_callback_rx(){
 	memcpy(buff_tx, buff_rx, sizeof(buff_tx)-1 );
 	usart_rx_ovr=0;
 }
-// Запустим DMA USART, и на прерывании вызовем функцию: usart1_callback_rx
+// Запустим DMA USART, и при обработке прерывания вызовем функцию: usart1_callback_rx
 // которая должна положить результат в нужное место
 uint8_t usart1_dma_rx(uint8_t* rxData, uint16_t buff_size, uint32_t timeout){
 	usart_ticks = 0;
@@ -225,6 +225,8 @@ uint8_t usart1_tx(uint8_t * txData, uint16_t buff_size, uint32_t timeout){
 }
 //----------------------------------------------------------
 // For Rx
+// Приоритет ниже чем у USART1_IRQHandler,
+// поэтому должно быть только одно прерывание
 void DMA2_Stream2_IRQHandler(void)
 {
 	// Stream x RECEIVE complete interrupt flag - TCIF

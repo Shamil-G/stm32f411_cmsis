@@ -1,5 +1,8 @@
 #include "main.h"
 
+#include "tim2.h"
+#include "encoder.h"
+
 #define DEAD_TIME 1
 // PWM out port: GPIOB 3
 uint8_t lockTim;

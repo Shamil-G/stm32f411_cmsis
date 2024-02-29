@@ -1,6 +1,7 @@
 #include "main.h"
 #include "led.h"
 #include "freq_meter.h"
+#include "encoder.h"
 
 // from pwm_single.c
 volatile uint32_t freq_meter_ticks = 0; // Для EXTI1_IRQHandler() - считает по входящим на порт
