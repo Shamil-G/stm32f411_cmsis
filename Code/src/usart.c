@@ -222,7 +222,9 @@ uint8_t usart1_tx(uint8_t * txData, uint16_t buff_size, uint32_t timeout){
 	}
 	// Have to check it - needed this or no?
 	// USART_SR_TC - frame transfer complete. Size frame data may different from BYTE
-	while ( (usart_ticks < timeout) && !(USART1->SR & USART_SR_TC) );        //Wait transmit all data
+	while ( (usart_ticks < timeout) && !(USART1->SR & USART_SR_TC) );
+	// Clear flag "transfer complete"
+	USART1->SR &= ~USART_SR_TC;
 
 	if (usart_ticks >= timeout)
 		usart_status = usart_ticks;
