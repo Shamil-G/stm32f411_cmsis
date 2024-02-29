@@ -8,7 +8,7 @@ extern uint32_t SystemCoreClock;
 volatile uint32_t ticks_delay = 0;
 // Every second set to 0
 volatile uint16_t s1_ticks = 0;
-extern uint32_t freqMeter;
+extern volatile uint32_t freqMeter;
 extern uint32_t meter_ticks;
 extern uint32_t tim5_freq_meter;
 

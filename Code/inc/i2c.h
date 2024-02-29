@@ -38,7 +38,6 @@ uint8_t i2c_call_device(I2C_TypeDef * p_i2c, int8_t addr_device, uint8_t mode, u
 #define START_I2C1_TRANSMIT I2C1->CR1 |= I2C_CR1_START
 #define STOP_I2C1_TRANSMIT  I2C1->CR1 &= ~I2C_CR1_STOP
 
-#define SHT31_ADDR 0x44
 #define I2C_READ  1
 #define I2C_WRITE 0
 

@@ -5,14 +5,10 @@
  *      Author: sguss
  */
 #include "main.h"
-#include "i2c.h"
+#include "sht31.h"
 
-extern uint32_t Delay_i2c;
-
-#define SHT31_command 0x240b
-
-uint8_t i2c_write(I2C_TypeDef* p_i2c, uint8_t addr_device, uint8_t* command, uint16_t, uint32_t);
-uint8_t i2c_read(I2C_TypeDef* p_i2c, uint8_t addr_device, uint8_t* data, uint16_t count, uint32_t timeout_ms);
+//uint8_t i2c_write(I2C_TypeDef* p_i2c, uint8_t addr_device, uint8_t* command, uint16_t, uint32_t);
+//uint8_t i2c_read(I2C_TypeDef* p_i2c, uint8_t addr_device, uint8_t* data, uint16_t count, uint32_t timeout_ms);
 
 
 struct SHT31_INFO{

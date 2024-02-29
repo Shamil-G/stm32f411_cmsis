@@ -3,7 +3,8 @@
 #include "freq_meter.h"
 
 // from pwm_single.c
-extern uint16_t currDutyTim;
+volatile uint32_t freq_meter_ticks = 0; // Для EXTI1_IRQHandler() - считает по входящим на порт
+volatile uint32_t freqMeter = 0;
 
 // Прерывание по фронтам входного сигнала
 // Идет через GPIO - те есть через EXTI класс прерываний
@@ -47,11 +48,6 @@ float getFreqDuty(void){
       result=(1000-currDutyTim)/10;
   }
   return (100-result);
-}
-
-inline uint32_t getFreqMeter(void){
-  return freqMeter;
-//			(CPU_CLOCK/listFreqPWMPSC[posFreqPWM]);
 }
 
 // Для измерения частоты будем использовать PA1, который будет входом для TIM5

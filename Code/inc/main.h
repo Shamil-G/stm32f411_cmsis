@@ -11,12 +11,15 @@
 //#define USE_SPI_DMA
 
 //#define USE_I2C
+//#define USE_SHT31
 //#define USE_I2C_DMA
 
-//#define USE_ADC
+
+#define USE_ADC
 
 //#define USE_ENCODER
 
+//#define USE_FREQ_METER
 
 #include "stm32f4xx.h"
 #include "adc-inject.h"
@@ -43,6 +46,20 @@
 #include "encoder.h"
 #endif
 
+#ifdef USE_I2C
+#include "i2c.h"
+
+#ifdef USE_SHT31
+#include "sht31.h"
+#endif
+
+#endif
+
+#ifdef USE_FREQ_METER
+#include "freq_meter.h"
+#endif
+
+
 #define _PLUG_NEWLIB
 
 void Delay(uint32_t ms);
@@ -68,18 +85,13 @@ void init_i2c(I2C_TypeDef * p_i2c);
 void dma_i2c1_init();
 
 // Encoder Section
-// ADC Section
-#define ADCTimer TIM4
+
+
 
 //  PWM Single Section
 #define PWMSingleTimer TIM2
 // Выбираем канал СС на который выйдет PWM
 #define PWMSingleTimerCCR PWMSingleTimer->CCR3
-
-// Freq Meter Section
-#define FreqMeterGPIO GPIOA
-#define FreqMeterPin  1
-#define FreqMeterAF   af2
 
 #define Timer5 			TIM5
 #define Timer5Enable	RCC->APB1ENR |= RCC_APB1ENR_TIM5EN
@@ -135,7 +147,6 @@ void Phase3_InitHrpwm(void);
 void Phase3_HRTim_OFF(void);
 void checkEncButton(void);
 void checkEncValue(void);
-void InitADC(void);
 void showSOS(void);
 void showUp(void);
 void showDown(void);
@@ -158,18 +169,9 @@ void pwm_down(void);
 void init_pwm(void);
 void pwm2_test(void);
 
-void FreqMeterOn(void);
-uint32_t getFreqMeter(void);
-float getFreqDuty(void);
-void setFreqMeterPSK(uint16_t psk);
 
 #ifdef USE_ADC
-
-float getInputVoltage(void);
-float getOutputVoltage(void);
-float getInputCurrent(void);
-float getOutputCurrent(void);
-
+#include "adc-inject.h"
 #endif
 
 void InitMainTick(void);

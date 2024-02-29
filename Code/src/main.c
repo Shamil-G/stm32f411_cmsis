@@ -7,16 +7,13 @@ SELECT_TIMER selected_timer=TIMER2;
 void toggle_led1(void);
 void enable_led1(void);
 //void meterPortOn();
-void FreqMeterOn(void);
-float SHT31_GetHumidity();
-float SHT31_GetTemperature();
-uint8_t sht31_request(I2C_TypeDef* p_i2c, uint8_t addr_device, uint32_t timeout_ms);
 
+#ifdef USE_I2C
 volatile uint8_t addr_device = 0x44; // Address sht31
 uint8_t status;
 float humidity;
 float temper;
-extern uint8_t tx_ready;
+#endif
 
 #ifdef USE_USART
 uint8_t buff_tx[16]= {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -49,8 +46,10 @@ int main(void){
 #ifdef USE_ADC
 	InitADC(); 			// 17.02.2024
 #endif
-//	meterPortOn();
-//	FreqMeterOn(); 		// 17.02.2024
+
+#ifdef USE_FREQ_METER
+	FreqMeterOn(); 		// 17.02.2024
+#endif
 //	Phase3_InitHrpwm();
 #ifdef USE_I2C
   	init_i2c(I2C1);
@@ -70,7 +69,7 @@ int main(void){
 #endif
 #ifdef USE_USART
 //		usart1_tx(buff_tx, sizeof(buff_tx), 100);
-		usart1_dma_tx(buff_tx, strlen(buff_rx), 100);
+		usart1_dma_tx(buff_tx, strlen((char*)&buff_rx), 100);
 //	  	memset(buff_rx, 0, sizeof(buff_rx));
 		usart1_dma_rx(buff_rx, sizeof(buff_rx), 100);
 //		usart1_rx(buff_rx, sizeof(buff_tx), 100);

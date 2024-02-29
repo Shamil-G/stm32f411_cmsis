@@ -6,6 +6,10 @@
  *      Author: sguss
  */
 
+#define ADCTimer TIM4
+
+void InitADC(void);
+
 void init_adc_struct(void);
 float getInputVoltage(void);
 float getInputCurrent(void);
