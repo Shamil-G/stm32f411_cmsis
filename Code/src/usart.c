@@ -19,6 +19,7 @@ volatile uint8_t  usart_buff_pos;
 
 extern uint8_t buff_tx[16];
 extern uint8_t buff_rx[16];
+uint8_t status_dma_tx;
 
 volatile uint8_t  usart_buffer_rx[USART_SIZE_BUFFER];
 
@@ -182,6 +183,7 @@ uint8_t usart1_rx(uint8_t * rxData, uint16_t buff_size, uint32_t timeout){
 uint8_t usart1_dma_tx(uint8_t * txData, uint16_t buff_size, uint32_t timeout){
 	usart_ticks = 0;
 	usart_status = 0;
+	status_dma_tx = 0;
 	// While Tx buffer not empty
 	while (!(USART1->SR & USART_SR_TXE) && (usart_ticks < timeout));
 
@@ -190,14 +192,18 @@ uint8_t usart1_dma_tx(uint8_t * txData, uint16_t buff_size, uint32_t timeout){
     // После передачи данных в канал, DMA автоматически становится DISABLE
     DMA2_Stream7->CR  |= DMA_SxCR_EN;				// Enable DMA
 
-	while ( (usart_ticks < timeout) && !READ_BIT(DMA2->HISR, DMA_HISR_TCIF7) );
-	while ( (usart_ticks < timeout) && !(USART1->SR & USART_SR_TC) );        //Wait transmit all data
-	// Flag interrupt clear register
-	DMA2->HIFCR |= 	DMA_HIFCR_CTCIF7 | // clear transfer complete interrupt flag
-					DMA_HIFCR_CHTIF7 | // clear half transfer interrupt flag
-					DMA_HIFCR_CTEIF7 | // clear transfer error interrupt flag
-				 	DMA_HIFCR_CDMEIF7 |// clear direct mode error interrupt flag
-					DMA_HIFCR_CFEIF7;  // clear FIFO error interrupt flag
+	while ( (usart_ticks < timeout) && !READ_BIT(DMA2->HISR, DMA_HISR_TCIF7) && !status_dma_tx);
+	// status_dma_tx выставляется в 1 во время прерывания
+	// Если прерывание отключено, то очистим статусы здесь сами
+	if(!status_dma_tx){
+		// While ( (usart_ticks < timeout) && !(USART1->SR & USART_SR_TC) );        //Wait transmit all data
+		// Flag interrupt clear register
+		DMA2->HIFCR |= 	DMA_HIFCR_CTCIF7 | // clear transfer complete interrupt flag
+						DMA_HIFCR_CHTIF7 | // clear half transfer interrupt flag
+						DMA_HIFCR_CTEIF7 | // clear transfer error interrupt flag
+						DMA_HIFCR_CDMEIF7 |// clear direct mode error interrupt flag
+						DMA_HIFCR_CFEIF7;  // clear FIFO error interrupt flag
+	}
 	if (usart_ticks >= timeout)
 		usart_status = usart_ticks;
 	return usart_status;
@@ -257,6 +263,7 @@ void DMA2_Stream7_IRQHandler(void)
 	if(READ_BIT(DMA2->HISR, DMA_HISR_TCIF7) == (DMA_HISR_TCIF7))
 	{
 		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CTCIF7);
+		status_dma_tx = 1;
 	}
 	if( DMA2->HISR & (DMA_HISR_TEIF7 | DMA_HISR_HTIF7 |
 		DMA_HISR_DMEIF7 | DMA_HISR_FEIF7) )
