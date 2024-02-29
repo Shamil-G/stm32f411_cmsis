@@ -523,7 +523,7 @@ void ili9341_init(uint16_t w_size, uint16_t h_size){
 void ili7735_Button_Draw(ST7735_Button* btn)
 {
 	uint16_t tmp,i;
-	uint16_t text_pos;
+	uint16_t text_pos=0;
 	uint8_t BCH,BCL;
 
 	ili9341_DrawRect(btn->BorderColor,btn->x,btn->y,btn->x+btn->w,btn->y+btn->h);
