@@ -1,7 +1,7 @@
 #pragma once
 /*
  * spi_ili9341.h
- *
+ * Author: Shamil Gusseynov
 */
 
 //https://www.youtube.com/watch?v=F9iZjc_r6k0&list=PLu9BJ8Y5m4bSrp6WGYSAlRBp6NowvChqn&index=1&t=973s

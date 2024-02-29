@@ -2,9 +2,9 @@
 /*
  * adc-inject.h
  *
- *  Created on: 26 февр. 2021 г.
- *      Author: sguss
- */
+ * Created on: 26 февр. 2021 г.
+ * Author: Shamil Gusseynov
+*/
 
 #define ADCTimer TIM4
 

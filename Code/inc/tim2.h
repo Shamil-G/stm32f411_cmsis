@@ -1,5 +1,7 @@
 #pragma once
-
+/*
+ * Author: Shamil Gusseynov
+*/
 void init_pwm(void);
 void tim2_freqDown();
 void tim2_freqUp();

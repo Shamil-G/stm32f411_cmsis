@@ -1,3 +1,7 @@
+/*
+ *  Author: Shamil Gusseynov
+ */
+
 #include "main.h"
 #include "stdio.h"
 #include "fonts.h"

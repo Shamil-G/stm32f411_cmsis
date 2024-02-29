@@ -1,5 +1,7 @@
 #pragma once
-
+/*
+ * Author: Shamil Gusseynov
+*/
 #define __TIMER TIM1
 #define T1_FIRST_COUNTER  TIM1->CCR1
 #define T1_SECOND_COUNTER TIM1->CCR2

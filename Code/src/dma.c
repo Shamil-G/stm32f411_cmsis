@@ -1,5 +1,7 @@
 #include "main.h"
-
+/*
+ *  Author: Shamil Gusseynov
+ */
 
 void dma_init(DMA_TypeDef * dma, DMA_Stream_TypeDef *dma_channel){
   //DMA controller clock enable

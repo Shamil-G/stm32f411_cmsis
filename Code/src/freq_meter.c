@@ -1,3 +1,7 @@
+/*
+ *  *  Author: Shamil Gusseynov
+ */
+
 #include "main.h"
 #include "led.h"
 #include "freq_meter.h"

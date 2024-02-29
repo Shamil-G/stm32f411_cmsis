@@ -2,7 +2,7 @@
  * gpio.c
  *
  *  Created on: 5 апр. 2021 г.
- *      Author: SHamil Gusseynov
+ *  Author: Shamil Gusseynov
  */
 
 #include "gpio.h"

@@ -2,7 +2,7 @@
  * sht31.c
  *
  *  Created on: Sep 2, 2023
- *      Author: sguss
+ *  Author: Shamil Gusseynov
  */
 #include "main.h"
 #include "i2c.h"
@@ -52,7 +52,7 @@ uint8_t MCP3421_request(I2C_TypeDef* p_i2c, uint8_t addr_device){
 			status = i2c_read(p_i2c, addr_device, buffer, MCP3421_DATA_LEN+1, MCP3421_TIMEOUT);
 
 			if(status){
-				memcpy(mcp3421, buffer, sizeof(MCP3421_DATA_LEN));
+				memcpy(mcp3421, buffer, MCP3421_DATA_LEN);
 			}
 		}
 	}

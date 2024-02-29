@@ -1,7 +1,7 @@
 #pragma once
-
-//#include "stm32f4xx.h"
-
+/*
+ * Author: Shamil Gusseynov
+*/
 #include "spi_ili9341.h"
 
 void spi_change_mode_transfer(SPI_TypeDef *spi);

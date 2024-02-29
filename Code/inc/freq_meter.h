@@ -1,8 +1,7 @@
 #pragma once
-
-#ifndef __FREQ_METER__
-#define __FREQ_METER__
-
+/*
+ * Author: Shamil Gusseynov
+*/
 extern uint16_t currDutyTim;
 
 extern volatile uint32_t  freq_meter_ticks; // Для EXTI1_IRQHandler() - считает по входящим на порт
@@ -21,5 +20,3 @@ inline uint32_t getFreqMeter(void){
 #define FreqMeterGPIO GPIOA
 #define FreqMeterPin  1
 #define FreqMeterAF   af2
-
-#endif

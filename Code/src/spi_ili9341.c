@@ -2,8 +2,9 @@
  * spi_ili9341.c
  *
  *  Created on: 26 окт. 2020 г.
- *      Author: sguss
+ *  Author: Shamil Gusseynov
  */
+
 #include "main.h"
 #include "spi.h"
 #include "spi_ili9341.h"

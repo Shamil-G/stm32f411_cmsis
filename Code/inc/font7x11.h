@@ -1,3 +1,7 @@
+#pragma once
+/*
+ * Author: Shamil Gusseynov
+*/
 #include "stm32f4xx.h"
 
 static const uint8_t Font7x11[] ={

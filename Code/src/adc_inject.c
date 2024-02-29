@@ -2,7 +2,7 @@
  * adc_inject.c
  *
  *  Created on: Feb 18, 2021
- *      Author: Shamil Gusseynov
+ *  Author: Shamil Gusseynov
  */
 
 #include "main.h"

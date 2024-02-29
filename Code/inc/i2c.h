@@ -1,5 +1,7 @@
 #pragma once
-
+/*
+ * Author: Shamil Gusseynov
+*/
 #include "main.h"
 
 #define USE_I2C_DMA

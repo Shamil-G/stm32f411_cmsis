@@ -7,9 +7,6 @@
 
 #pragma once
 
-#ifndef INC_HRTIM_STM32F4xx
-#define INC_HRTIM_STM32F4xx
-
 typedef enum
 {
 	Timer_A=0,
@@ -25,5 +22,3 @@ void HRTim_GPioOn(HRTimer timer);
 #define CountChannel	2
 #define ChannelPeriodHalf HRTIMPeriod/(2*CountChannel)
 
-
-#endif

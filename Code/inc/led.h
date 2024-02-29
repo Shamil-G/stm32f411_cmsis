@@ -1,10 +1,7 @@
 #pragma once
-
-//#define STM32F401CCU
-//#define STM32F407VET
-//#define STM32F769NI
-//#define STM32F334R8T6_NUCLEO
-
+/*
+ * Author: Shamil Gusseynov
+*/
 #define   STM32F411
 
 void led1_on(void);

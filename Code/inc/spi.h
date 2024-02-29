@@ -1,5 +1,7 @@
 #pragma once
-
+/*
+ * Author: Shamil Gusseynov
+*/
 #include "main.h"
 
 #define SPI_MOSI_Port	GPIOB

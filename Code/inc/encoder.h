@@ -1,5 +1,7 @@
 #pragma once
-
+/*
+ * Author: Shamil Gusseynov
+*/
 void checkEncButton(void);
 void checkEncValue(void);
 

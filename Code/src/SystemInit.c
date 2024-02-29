@@ -1,3 +1,7 @@
+/*
+ *  Author: Shamil Gusseynov
+ */
+
 #include "main.h"
 
 // Original function SystemInit(void) is in file system__stm32f4xx.c

@@ -1,5 +1,7 @@
 #pragma once
-
+/*
+ * Author: Shamil Gusseynov
+*/
 void TIM5On(void);
 
 #define Timer5 			TIM5

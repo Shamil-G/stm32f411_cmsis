@@ -2,8 +2,9 @@
  * I2C.cpp
  *
  *  Created on: Aug 30, 2023
- *      Author: sguss
+ *  Author: Shamil Gusseynov
  */
+
 #include "i2c.h"
 
 uint16_t i2c_ticks;

@@ -2,8 +2,9 @@
  * sht31.c
  *
  *  Created on: Sep 2, 2023
- *      Author: sguss
+ *  Author: Shamil Gusseynov
  */
+
 #include "main.h"
 #include "sht31.h"
 

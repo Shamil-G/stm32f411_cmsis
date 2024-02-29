@@ -2,11 +2,9 @@
 /*
  * SysTick.h
  *
- *  Created on: Aug 30, 2023
- *      Author: sguss
+ * Created on: Aug 30, 2023
+ * Author: Shamil Gusseynov
  */
-
-#ifdef USE_SYSTICK
 
 void Delay(uint32_t sleep);
 
@@ -15,4 +13,3 @@ uint32_t remain_time(int8_t num_timer);
 void clearTimer(int8_t num_timer);
 void init_SysTick(void);
 
-#endif

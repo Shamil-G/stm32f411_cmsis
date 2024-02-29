@@ -2,8 +2,9 @@
  * usart.c
  *
  *  Created on: Feb 11, 2024
- *      Author: sguss
+ *  Author: Shamil Gusseynov
  */
+
 
 #define STM32F411
 

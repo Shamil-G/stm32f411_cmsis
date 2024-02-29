@@ -2,7 +2,7 @@
  * ads115.c
  *
  *  Created on: Sep 18, 2023
- *      Author: sguss
+ *  Author: Shamil Gusseynov
  */
 
 #include "main.h"

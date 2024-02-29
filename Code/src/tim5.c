@@ -1,3 +1,7 @@
+/*
+ *  Author: Shamil Gusseynov
+ */
+
 #include "main.h"
 
 #include "tim5.h"

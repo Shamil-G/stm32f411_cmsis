@@ -1,5 +1,7 @@
 #pragma once
-
+/*
+ * Author: Shamil Gusseynov
+*/
 #define STM32F411
 
 #define _PLUG_NEWLIB
@@ -19,7 +21,7 @@ void SystemUp();
 #define USE_SYSTICK
 
 //#define USE_TIM1
-// Single PWM
+//// Single PWM
 //#define USE_TIM2
 
 #define USE_USART
@@ -28,16 +30,16 @@ void SystemUp();
 
 //#define USE_SPI
 //#define USE_SPI_DMA
-
+//
 //#define USE_I2C
 //#define USE_SHT31
 //#define USE_I2C_DMA
-
-
+//
+//
 //#define USE_ADC
-
+//
 //#define USE_ENCODER
-
+//
 //#define USE_FREQ_METER
 
 #include "stm32f4xx.h"

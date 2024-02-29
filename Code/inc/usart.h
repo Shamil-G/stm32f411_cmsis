@@ -1,5 +1,7 @@
 #include "main.h"
-
+/*
+ * Author: Shamil Gusseynov
+*/
 #ifdef STM32F411
 
 void usart_init(USART_TypeDef* usart);

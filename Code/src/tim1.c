@@ -1,3 +1,7 @@
+/*
+ *  Author: Shamil Gusseynov
+ */
+
 #include "main.h"
 
 #include "tim1.h"
@@ -12,7 +16,7 @@ uint8_t lockTim1;
 //
 // В процентах заполнение меандра положительным сигналом
 // % = currDutyTim1/10
-uint16_t  currDutyTim1;
+volatile uint16_t  currDutyTim1;
 // Номер выбранной частоты в списке Tim1_listFreqPWMPSC
 uint8_t  Tim1_posFreqPWM;
 // Список формируемых частот
