@@ -26,7 +26,7 @@ void SystemUp();
 
 #define USE_USART
 #define USE_USART_DMA
-
+#define USE_RTC
 
 //#define USE_SPI
 //#define USE_SPI_DMA
@@ -80,7 +80,10 @@ void SystemUp();
 #ifdef USE_SHT31
 #include "sht31.h"
 #endif
+#endif
 
+#ifdef USE_RTC
+#include "rtc.h"
 #endif
 
 #ifdef USE_FREQ_METER

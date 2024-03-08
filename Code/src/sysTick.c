@@ -33,6 +33,10 @@ extern uint16_t usart_ticks;
 extern uint16_t i2c_ticks;
 #endif
 
+#ifdef USE_RTC
+extern volatile uint8_t rtc_ticks;
+#endif
+
 //void led_upd(void);
 //void freqMeter_upd(void);
 //
@@ -60,6 +64,9 @@ void SysTick_Handler(void) {
 #endif
 #ifdef USE_I2C
   i2c_ticks++;
+#endif
+#ifdef USE_RTC
+  rtc_ticks++;
 #endif
 }
 
