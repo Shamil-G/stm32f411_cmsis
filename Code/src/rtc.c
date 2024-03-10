@@ -37,20 +37,16 @@ void RTC_Update()
 	RTC->PRER |= (uint32_t)399;
 
 	// Устанавливаем время
-	TR = ((set_rtc_time.h/10) << RTC_TR_HT_Pos) | ((set_rtc_time.h%10) << RTC_TR_HU_Pos);
+	TR = ((set_rtc_time.h/10) << RTC_TR_HT_Pos) | ((set_rtc_time.h%10) << RTC_TR_HU_Pos) |
+			((set_rtc_time.m/10) << RTC_TR_MNT_Pos) | ((set_rtc_time.m%10) << RTC_TR_MNU_Pos) |
+			((set_rtc_time.s/10) << RTC_TR_ST_Pos) | ((set_rtc_time.s%10) << RTC_TR_SU_Pos);
 
-	TR |= ((set_rtc_time.m/10) << RTC_TR_MNT_Pos) | ((set_rtc_time.m%10) << RTC_TR_MNU_Pos);
-	TR |= ((set_rtc_time.s/10) << RTC_TR_ST_Pos) | ((set_rtc_time.s%10) << RTC_TR_SU_Pos);
-
-//			(uint32_t)(rtc_time.h/10*16 + rtc_time.h%10) << 16 |
-//			(uint32_t)(rtc_time.m/10*16 + rtc_time.m%10) << 8 |
-//			(uint32_t)(rtc_time.s/10*16 + rtc_time.s%10);
 	RTC->TR = TR;
 	// Устанавливаем дату
-	DR  = set_rtc_date.w << RTC_DR_WDU_Pos;
-	DR |= ((set_rtc_date.y/10) << RTC_DR_YT_Pos) | ((set_rtc_date.y%10) << RTC_DR_YU_Pos);
-	DR |= ((set_rtc_date.m/10) << RTC_DR_MT_Pos) | ((set_rtc_date.m%10) << RTC_DR_MU_Pos);
-	DR |= ((set_rtc_date.d/10) << RTC_DR_DT_Pos) | ((set_rtc_date.d%10) << RTC_DR_DU_Pos);
+	DR  = set_rtc_date.w << RTC_DR_WDU_Pos |
+			((set_rtc_date.y/10) << RTC_DR_YT_Pos) | ((set_rtc_date.y%10) << RTC_DR_YU_Pos) |
+			((set_rtc_date.m/10) << RTC_DR_MT_Pos) | ((set_rtc_date.m%10) << RTC_DR_MU_Pos) |
+			((set_rtc_date.d/10) << RTC_DR_DT_Pos) | ((set_rtc_date.d%10) << RTC_DR_DU_Pos);
 
 	RTC->DR = DR;
 
@@ -145,22 +141,27 @@ void RTC_Init_HSE()
 }
 
 void rtc_init_date(){
+	set_rtc_time.h=23;
+	set_rtc_time.m=58;
+	set_rtc_time.s=56;
+
 	set_rtc_date.y=2024 - 2000;
 	set_rtc_date.m=3;
 	set_rtc_date.d=9;
 	set_rtc_date.w=6;
-	set_rtc_time.h=23;
-	set_rtc_time.m=58;
-	set_rtc_time.s=56;
 }
 
 void rtc_get_data(){
-	rtc_date.y = ( (RTC->DR & RTC_DR_YT) >> RTC_DR_YT_Pos ) * 10 + ((RTC->DR & RTC_DR_YU) >> RTC_DR_YU_Pos) + 2000;
-	rtc_date.m = ( (RTC->DR & RTC_DR_MT) >> RTC_DR_MT_Pos ) * 10 + ((RTC->DR & RTC_DR_MU) >> RTC_DR_MU_Pos);
-	rtc_date.d = ( (RTC->DR & RTC_DR_DT) >> RTC_DR_DT_Pos ) * 10 + ((RTC->DR & RTC_DR_DU) >> RTC_DR_DU_Pos);
-	rtc_date.w = ( RTC->DR & RTC_DR_WDU ) >> RTC_DR_WDU_Pos;
+	// Чтение текущего времени RTC блокирует значения в теневых регистрах календаря до тех пор,
+	// пока не будет прочитана текущая дата
+
 	// Time
 	rtc_time.s = ( (RTC->TR & RTC_TR_ST) >> RTC_TR_ST_Pos ) * 10 + ((RTC->TR & RTC_TR_SU) >> RTC_TR_SU_Pos);
 	rtc_time.m = ( (RTC->TR & RTC_TR_MNT) >> RTC_TR_MNT_Pos ) * 10 + ((RTC->TR & RTC_TR_MNU) >> RTC_TR_MNU_Pos);
 	rtc_time.h = ( (RTC->TR & RTC_TR_HT) >> RTC_TR_HT_Pos ) * 10 + ((RTC->TR & RTC_TR_HU) >> RTC_TR_HU_Pos);
+	// Date
+	rtc_date.y = ( (RTC->DR & RTC_DR_YT) >> RTC_DR_YT_Pos ) * 10 + ((RTC->DR & RTC_DR_YU) >> RTC_DR_YU_Pos) + 2000;
+	rtc_date.m = ( (RTC->DR & RTC_DR_MT) >> RTC_DR_MT_Pos ) * 10 + ((RTC->DR & RTC_DR_MU) >> RTC_DR_MU_Pos);
+	rtc_date.d = ( (RTC->DR & RTC_DR_DT) >> RTC_DR_DT_Pos ) * 10 + ((RTC->DR & RTC_DR_DU) >> RTC_DR_DU_Pos);
+	rtc_date.w = ( RTC->DR & RTC_DR_WDU ) >> RTC_DR_WDU_Pos;
 }
