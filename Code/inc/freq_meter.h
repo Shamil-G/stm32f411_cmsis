@@ -11,10 +11,11 @@ extern volatile uint16_t  currDutyTim1;
 uint32_t getFreqPWM(void);
 void  FreqMeterOn(void);
 float getFreqDuty(void);
-inline uint32_t getFreqMeter(void){
-  return freqMeter;
-//			(CPU_CLOCK/listFreqPWMPSC[posFreqPWM]);
-};
+#define getFreqMeter() freqMeter
+//inline uint32_t getFreqMeter(void){
+//  return freqMeter;
+////			(CPU_CLOCK/listFreqPWMPSC[posFreqPWM]);
+//};
 
 // Freq Meter Section
 #define FreqMeterGPIO GPIOA

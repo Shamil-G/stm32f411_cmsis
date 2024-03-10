@@ -9,30 +9,44 @@
 //#define USE_SPI
 
 #include "driver_ili9341.h"
-#include "freq_meter.h"
+
+#ifdef USE_ADC
 #include "adc-inject.h"
+char i_voltage_buf[48];
+char i_current_buf[48];
+char o_voltage_buf[48];
+char o_current_buf[48];
+float    i_voltage, i_current;
+float    o_voltage, o_current;
+extern uint16_t adc_ticks;
+#endif
+
+#ifdef USE_ENCODER
 #include "encoder.h"
+
+extern uint16_t encoder_ticks;
+extern uint16_t bounce_encoder;
+#endif
+
+#ifdef USE_FREQ_METER
+#include "freq_meter.h"
+
+extern volatile uint32_t freqMeter;
+char o_freq_buf[48];
+char o_freq_adc_buf[48];
+extern uint32_t freq_ticks;
+#endif
+
+#ifdef USE_RTC
+#include "rtc.h"
+char v_date[24];
+char v_time[24];
+#endif
 
 ST7735_Button button;
 ST7735_ProgressBar pbar;
-float    i_voltage, i_current;
-float    o_voltage, o_current;
 uint32_t screen_ticks;
 
-extern uint32_t freq_ticks;
-extern volatile uint32_t freqMeter;
-extern uint16_t adc_ticks;
-extern uint16_t encoder_ticks;
-extern uint16_t bounce_encoder;
-
-char i_voltage_buf[48];
-char i_current_buf[48];
-
-char o_voltage_buf[48];
-char o_current_buf[48];
-
-char o_freq_buf[48];
-char o_freq_adc_buf[48];
 
 char o_duty[48];
 char o_status[200];
@@ -61,8 +75,10 @@ char 	*titleMenu[]={"I", "Freq", "Duty", "Timer", "    "};
 uint16_t pos_MenuTitle[]={5, 35, 110, 180, 270};
 
 void ili9341_gpio_init(void){
+#ifdef USE_ADC
   i_voltage_buf[0]=0;
   i_current_buf[0]=0;
+#endif
   // RESET
   InitGPio( SPI_RESET_Port, SPI_RESET_Pin, output, push_pull, high, noPull, af0);
   PortReset(SPI_RESET_Port, SPI_RESET_Pin);
@@ -117,6 +133,7 @@ void showCommon(){
       ili9341_primary_tune();
       prev_active_menu_item=active_menu_item;
   }
+#ifdef USE_ADC
   i_voltage = getInputVoltage();
   i_current = getInputCurrent();
   o_voltage = getOutputVoltage();
@@ -127,13 +144,23 @@ void showCommon(){
   sprintf(o_voltage_buf,"%4.3f v ", o_voltage);
   sprintf(o_current_buf,"%4.3f a ", o_current);
 
-  sprintf(o_freq_buf,"%7u Hz", (unsigned int)getFreqMeter());
-
   ili9341_String(170,(3+0.3)*lcdprop.pFont->Height,i_voltage_buf);
   ili9341_String(170,(4+0.3)*lcdprop.pFont->Height,i_current_buf);
   ili9341_String(170,(6+0.3)*lcdprop.pFont->Height,o_voltage_buf);
   ili9341_String(170,(7+0.3)*lcdprop.pFont->Height,o_current_buf);
+#endif
+
+#ifdef USE_FREQ_METER
+  sprintf(o_freq_buf,"%7u Hz", (unsigned int)getFreqMeter());
   ili9341_String(145,(9+0.3)*lcdprop.pFont->Height,o_freq_buf);
+#endif
+
+#ifdef USE_RTC
+  sprintf(v_time,"%02d:%02d:%02d", rtc_time.h, rtc_time.m, rtc_time.s);
+  sprintf(v_date,"%02d.%02d.%4d %d", rtc_date.d, rtc_date.m, rtc_date.y, rtc_date.w);
+  ili9341_String(5,(2+0.3)*lcdprop.pFont->Height,v_time);
+  ili9341_String(130,(2+0.3)*lcdprop.pFont->Height,v_date);
+#endif
 }
 
 void showTitlePWM_FREQ(){
@@ -225,7 +252,6 @@ void ili9341_primary_tune(){
 }
 
 void show_ili9341_monitor(){
-	uint32_t cur_adc_ticks;
   switch (active_menu_item){
     case Common: showCommon();
       break;
@@ -240,17 +266,22 @@ void show_ili9341_monitor(){
     default: showCommon();
   }
   // Покажем период работы таймера
+#ifdef USE_ADC
+  uint32_t cur_adc_ticks;
   cur_adc_ticks = (adc_result_buf.adc_max_calc==0)?1:adc_result_buf.adc_max_calc;
   if(active_menu_item==Common){
 	  sprintf(o_freq_adc_buf, "%4ld kHz", cur_adc_ticks/adc_ticks );
 	  ili9341_String(177,(10+0.3)*lcdprop.pFont->Height,o_freq_adc_buf);
   }
+#endif
 //  sprintf(o_status,"Screen: %ldms, Bounce: %d    ", ticks, Bounce );
   sprintf(o_status,"Screen:%4ldms, Bounce:%4dms ", screen_ticks, bounce_encoder );
   ili9341_String(7,210,o_status);
 
+#ifdef USE_ADC
   screen_ticks=0;
   adc_result_buf.adc_max_calc=0;
   adc_ticks = 0;
+#endif
 }
 

@@ -17,11 +17,10 @@ volatile uint8_t  usart_status;
 volatile uint8_t  usart_rx_ovr;
 volatile uint8_t  usart_buff_pos;
 
-extern uint8_t buff_tx[16];
-extern uint8_t buff_rx[16];
 uint8_t status_dma_tx;
 
-volatile uint8_t  usart_buffer_rx[USART_SIZE_BUFFER];
+uint8_t  usart_buffer_rx[USART_SIZE_BUFFER];
+uint8_t  usart_buffer_tx[USART_SIZE_BUFFER];
 
 void usart1_gpio_init() {
 	InitGPio(USART1_TX_PORT,
@@ -132,7 +131,7 @@ void usart_init(USART_TypeDef* usart){
 }
 //---------------------------------------------------------------------------
 void usart1_callback_rx(){
-	memcpy(buff_tx, buff_rx, sizeof(buff_tx)-1 );
+	memcpy(usart_buffer_tx, usart_buffer_rx, sizeof(usart_buffer_tx)-1 );
 	usart_rx_ovr=0;
 }
 // Запустим DMA USART, и при обработке прерывания вызовем функцию: usart1_callback_rx

@@ -2,18 +2,19 @@
 
 #include "rtc.h"
 
-volatile RTC_struct rtc;
-
 volatile uint8_t rtc_ticks;
 volatile sRTC_DateType rtc_date;
 volatile sRTC_TimeType rtc_time;
+
+volatile sRTC_DateType set_rtc_date;
+volatile sRTC_TimeType set_rtc_time;
 
 inline uint32_t active_rtc(){
 	return RTC->ISR & RTC_ISR_INITS;
 }
 
 
-void RTC_Update(sRTC_DateType *date_ptr, sRTC_TimeType *time_ptr)
+void RTC_Update()
 {
 	uint32_t TR, DR;
 	// Выключаем защиту от записи
@@ -36,15 +37,21 @@ void RTC_Update(sRTC_DateType *date_ptr, sRTC_TimeType *time_ptr)
 	RTC->PRER |= (uint32_t)399;
 
 	// Устанавливаем время
-	TR = (uint32_t)(time_ptr->h/10*16 + time_ptr->h%10) << 16 |
-			(uint32_t)(time_ptr->m/10*16 + time_ptr->m%10) << 8 |
-			(uint32_t)(time_ptr->s/10*16 + time_ptr->s%10);
+	TR = ((set_rtc_time.h/10) << RTC_TR_HT_Pos) | ((set_rtc_time.h%10) << RTC_TR_HU_Pos);
+
+	TR |= ((set_rtc_time.m/10) << RTC_TR_MNT_Pos) | ((set_rtc_time.m%10) << RTC_TR_MNU_Pos);
+	TR |= ((set_rtc_time.s/10) << RTC_TR_ST_Pos) | ((set_rtc_time.s%10) << RTC_TR_SU_Pos);
+
+//			(uint32_t)(rtc_time.h/10*16 + rtc_time.h%10) << 16 |
+//			(uint32_t)(rtc_time.m/10*16 + rtc_time.m%10) << 8 |
+//			(uint32_t)(rtc_time.s/10*16 + rtc_time.s%10);
 	RTC->TR = TR;
 	// Устанавливаем дату
-	DR = (uint32_t)(date_ptr->y/10*16 + date_ptr->y%10) << 16  |
-			(uint32_t)(date_ptr->w/10*16 + date_ptr->w%10) << 13 |
-			(uint32_t)(date_ptr->m/10*16 + date_ptr->m%10) << 8 |
-			(uint32_t)(date_ptr->d/10*16 + date_ptr->d%10);
+	DR  = set_rtc_date.w << RTC_DR_WDU_Pos;
+	DR |= ((set_rtc_date.y/10) << RTC_DR_YT_Pos) | ((set_rtc_date.y%10) << RTC_DR_YU_Pos);
+	DR |= ((set_rtc_date.m/10) << RTC_DR_MT_Pos) | ((set_rtc_date.m%10) << RTC_DR_MU_Pos);
+	DR |= ((set_rtc_date.d/10) << RTC_DR_DT_Pos) | ((set_rtc_date.d%10) << RTC_DR_DU_Pos);
+
 	RTC->DR = DR;
 
 	// Set 12 Hour, Default 24 Hour
@@ -57,7 +64,7 @@ void RTC_Update(sRTC_DateType *date_ptr, sRTC_TimeType *time_ptr)
 	RTC->WPR = 0xFF;
 }
 
-void RTC_Init_LSI(sRTC_DateType *date_ptr, sRTC_TimeType *time_ptr)
+void RTC_Init_LSI()
 {
 	// Включаем LSI
 	RCC->CSR |= RCC_CSR_LSION;
@@ -84,11 +91,13 @@ void RTC_Init_LSI(sRTC_DateType *date_ptr, sRTC_TimeType *time_ptr)
 	// Включаем тактиование RTC
 	RCC->BDCR |= RCC_BDCR_RTCEN;
 
-	RTC_Update(date_ptr, time_ptr);
+	RTC_Update();
 }
 
-void RTC_Init_LSE(sRTC_DateType *date_ptr, sRTC_TimeType *time_ptr)
+void RTC_Init_LSE()
 {
+//	if(active_rtc()) return;
+
 	//Проверяем тикают ли часики
 	if(RTC->ISR & RTC_ISR_INITS) return;
 
@@ -111,13 +120,13 @@ void RTC_Init_LSE(sRTC_DateType *date_ptr, sRTC_TimeType *time_ptr)
 	// Включаем тактиование RTC
 	RCC->BDCR |= RCC_BDCR_RTCEN;
 
-	RTC_Update(date_ptr, time_ptr);
+	RTC_Update(&rtc_date, &rtc_time);
 }
 
-void RTC_Init_HSE(sRTC_DateType *date_ptr, sRTC_TimeType *time_ptr)
+void RTC_Init_HSE()
 {
 	//Проверяем тикают ли часики
-	if(active_rtc()) return;
+//	if(active_rtc()) return;
 
 	// Включаем тактирование модуля PWR
 	RCC->APB1ENR |= RCC_APB1ENR_PWREN;
@@ -132,22 +141,26 @@ void RTC_Init_HSE(sRTC_DateType *date_ptr, sRTC_TimeType *time_ptr)
 	// Включаем тактиование RTC
 	RCC->BDCR |= RCC_BDCR_RTCEN;
 
-	RTC_Update(date_ptr, time_ptr);
+	RTC_Update(&rtc_date, &rtc_time);
+}
+
+void rtc_init_date(){
+	set_rtc_date.y=2024 - 2000;
+	set_rtc_date.m=3;
+	set_rtc_date.d=9;
+	set_rtc_date.w=6;
+	set_rtc_time.h=23;
+	set_rtc_time.m=58;
+	set_rtc_time.s=56;
 }
 
 void rtc_get_data(){
-	uint8_t v;
-	// Date
-	rtc_date.d = ( (RTC->DR & 0x3F) >> 4 ) * 10 + (RTC->TR & 0x0F);
-	v = (RTC->DR & 0x1F00) >> 8;
-	rtc_date.m = ( (v & 0x1F) >> 4 ) * 10 + (v & 0x0F);
-	v = (RTC->DR & 0xfF0000) >> 16;
-	rtc_date.y = ( (v & 0xF0) >> 4 ) * 10 + (v & 0x0F);
-	rtc_date.w = ( RTC->DR & 0xF000 ) >> 12;
+	rtc_date.y = ( (RTC->DR & RTC_DR_YT) >> RTC_DR_YT_Pos ) * 10 + ((RTC->DR & RTC_DR_YU) >> RTC_DR_YU_Pos) + 2000;
+	rtc_date.m = ( (RTC->DR & RTC_DR_MT) >> RTC_DR_MT_Pos ) * 10 + ((RTC->DR & RTC_DR_MU) >> RTC_DR_MU_Pos);
+	rtc_date.d = ( (RTC->DR & RTC_DR_DT) >> RTC_DR_DT_Pos ) * 10 + ((RTC->DR & RTC_DR_DU) >> RTC_DR_DU_Pos);
+	rtc_date.w = ( RTC->DR & RTC_DR_WDU ) >> RTC_DR_WDU_Pos;
 	// Time
-	rtc_time.s = ( (RTC->TR & 0x7F) >> 4 ) * 10 + (RTC->TR & 0x0F);
-	v = (RTC->TR & 0x7F00) >> 8;
-	rtc_time.m = ( (v & 0x7F) >> 4 ) * 10 + (v & 0x0F);
-	v = (RTC->TR & 0x7F0000) >> 16;
-	rtc_time.h = ( (v & 0x7F) >> 4 ) * 10 + (v & 0x0F);
+	rtc_time.s = ( (RTC->TR & RTC_TR_ST) >> RTC_TR_ST_Pos ) * 10 + ((RTC->TR & RTC_TR_SU) >> RTC_TR_SU_Pos);
+	rtc_time.m = ( (RTC->TR & RTC_TR_MNT) >> RTC_TR_MNT_Pos ) * 10 + ((RTC->TR & RTC_TR_MNU) >> RTC_TR_MNU_Pos);
+	rtc_time.h = ( (RTC->TR & RTC_TR_HT) >> RTC_TR_HT_Pos ) * 10 + ((RTC->TR & RTC_TR_HU) >> RTC_TR_HU_Pos);
 }

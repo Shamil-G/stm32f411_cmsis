@@ -52,6 +52,7 @@ uint8_t usart1_dma_tx(uint8_t * txData, uint16_t buff_size, uint32_t timeout);
 
 #endif
 
-extern volatile uint8_t usart_buffer_rx[USART_SIZE_BUFFER];
+extern uint8_t usart_buffer_rx[USART_SIZE_BUFFER];
+extern uint8_t usart_buffer_tx[USART_SIZE_BUFFER];
 
 #endif

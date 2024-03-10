@@ -25,9 +25,11 @@ int main(void){
       SystemUp();
 //      initRCC_F411();
 //      InitMainTick();
+
 #ifdef USE_SYSTICK
 	init_SysTick();
 #endif
+
 //      init_pwm(); 		// 17.02.2024
 #ifdef USE_ENCODER
 	EncoderOn();
@@ -38,11 +40,13 @@ int main(void){
 	spi_init(SPI2);
 	dma_spi2_init();
 #endif
+
 #ifdef USE_SCREEN
 	ili9341_gpio_init();
 	ili9341_init(240,320);
 	ili9341_primary_tune();
 #endif
+
 #ifdef USE_ADC
 	InitADC(); 			// 17.02.2024
 #endif
@@ -58,15 +62,21 @@ int main(void){
 #ifdef USE_USART
   	usart_init(USART1);
 #endif
-	enable_led1();
 
+#ifdef USE_RTC
+  	rtc_init_date();
+  	RTC_Init_LSI();
+#endif
+
+  	enable_led1();
 	while(1){
 
 #ifdef USE_I2C
-		status = sht31_request(I2C1, addr_device, 500);
-		humidity=SHT31_GetHumidity();
-		temper=SHT31_GetTemperature();
+	status = sht31_request(I2C1, addr_device, 500);
+	humidity=SHT31_GetHumidity();
+	temper=SHT31_GetTemperature();
 #endif
+
 #ifdef USE_USART
 //		usart1_tx(buff_tx, sizeof(buff_tx), 100);
 		usart1_dma_tx(buff_tx, strlen((char*)&buff_rx), 100);
@@ -74,9 +84,17 @@ int main(void){
 		usart1_dma_rx(buff_rx, sizeof(buff_rx), 100);
 //		usart1_rx(buff_rx, sizeof(buff_tx), 100);
 #endif
-		Delay(100);
-		toggle_led1();
-//	  show_ili9341_monitor();
+
+#ifdef USE_RTC
+	  rtc_get_data();
+#endif
+
+#ifdef USE_SPI
+	  show_ili9341_monitor();
+#endif
+
+	  Delay(500);
+	  toggle_led1();
 	}
 }
 

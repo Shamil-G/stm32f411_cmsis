@@ -19,28 +19,30 @@
 void SystemUp();
 
 #define USE_SYSTICK
+#define USE_SCREEN
 
-//#define USE_TIM1
+#define USE_TIM1
 //// Single PWM
-//#define USE_TIM2
+#define USE_TIM2
 
-#define USE_USART
-#define USE_USART_DMA
+//#define USE_USART
+//#define USE_USART_DMA
+
 #define USE_RTC
 
-//#define USE_SPI
-//#define USE_SPI_DMA
+#define USE_SPI
+#define USE_SPI_DMA
 //
 //#define USE_I2C
 //#define USE_SHT31
 //#define USE_I2C_DMA
 //
 //
-//#define USE_ADC
+#define USE_ADC
 //
-//#define USE_ENCODER
-//
-//#define USE_FREQ_METER
+#define USE_ENCODER
+
+#define USE_FREQ_METER
 
 #include "stm32f4xx.h"
 #include "led.h"
@@ -62,6 +64,9 @@ void SystemUp();
 #ifdef USE_SPI
 #define USE_SPI_ILI9341
 #include "spi.h"
+#endif
+
+#ifdef USE_SCREEN
 #include "spi_ili9341.h"
 #include "driver_ili9341.h"
 #endif
